@@ -1,16 +1,15 @@
-/// Pure task-space arithmetic: which space a cycle shortcut lands on.
-/// The space switcher (not built yet) will drive this; keeping it pure
-/// keeps the wraparound edge cases testable.
-enum SpaceCycler {
-    /// Index of the space after `index`, wrapping past the end.
-    /// `nil` when there are no spaces.
+/// Pure switcher arithmetic: which entry a cycle keypress lands on.
+/// Kept free of AppKit so the wraparound edge cases stay testable.
+enum SelectionCycler {
+    /// Index of the entry after `index`, wrapping past the end.
+    /// `nil` when there are no entries.
     static func next(after index: Int, count: Int) -> Int? {
         guard count > 0 else { return nil }
         return mod(index + 1, count)
     }
 
-    /// Index of the space before `index`, wrapping past the start.
-    /// `nil` when there are no spaces.
+    /// Index of the entry before `index`, wrapping past the start.
+    /// `nil` when there are no entries.
     static func previous(before index: Int, count: Int) -> Int? {
         guard count > 0 else { return nil }
         return mod(index - 1, count)

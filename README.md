@@ -3,22 +3,37 @@
 </p>
 
 <p align="center">
-  A macOS multitasking manager — switch between tasks, not just windows: every job gets its own space in the house.<br />
+  A macOS window switcher in the spirit of AltTab — press <kbd>Option+Tab</kbd> and every
+  window of every app, minimized ones included, appears in a panel on the screen you're on.<br />
   A single dependency-free Swift Package — builds with the <code>swift</code> CLI alone, no Xcode project required.
 </p>
 
-> [!NOTE]
-> **Scaffold stage.** The project structure, build/dev/test scripts, asset pipeline, and the
-> menu bar app shell are in place; the task-space engine itself is not built yet. See the
-> roadmap below for what comes next.
+## How it works
 
-## What it will do
+- **Option+Tab** opens the switcher on the screen under the mouse cursor and steps forward;
+  keep tapping Tab (with Option held) to keep cycling.
+- **Option+Shift+Tab** cycles backwards. Holding Tab down keeps cycling (system-style key
+  repeat), and the **arrow keys** move the selection too — left/right with wraparound,
+  up/down by row. Hovering with the mouse also moves the selection.
+- **Option+`** opens the same switcher scoped to the frontmost app's own windows — the
+  panel version of the system's ⌘` (Option+Shift+` cycles backwards).
+- **Release Option** to switch to the selected window — a quick tap jumps straight to the
+  window you were just in. Minimized windows are restored, hidden apps unhidden.
+- **Return** (or clicking an entry) switches to the highlighted window; **Escape** cancels.
+- Windows are listed front-to-back; minimized windows, hidden apps, and windows on other
+  Spaces trail at the end, drawn dimmed.
+- Each card shows a **live window preview** (captured via ScreenCaptureKit) with the app
+  icon as a badge. Previews are cached per window — persisted to disk across relaunches
+  (cleared on reboot, since window IDs reset) — so the panel opens with pictures already
+  in place and refreshes them silently; minimized windows keep the preview from before
+  they were minimized.
+- The panel itself is clear **Liquid Glass** with the same tuned material as Transom's
+  HUD, plus a specular rim re-derived for the panel's size.
 
-- Group windows into named task spaces — "the PR review", "the trip planning" — and switch
-  between whole tasks at once instead of window by window.
-- Cycle spaces with a shortcut; the wraparound arithmetic already exists in
-  `SpaceCycler.swift`, tests and all.
-- Restore a task's window arrangement when you come back to it.
+Atrium needs the **Accessibility** permission (System Settings → Privacy & Security →
+Accessibility) — that's how it enumerates and raises other apps' windows. It prompts on
+first launch. Window previews additionally need **Screen Recording** (granting takes
+effect on the next launch); without it the switcher just shows app icons.
 
 ## Building the app
 
@@ -45,16 +60,20 @@ Swift Testing needs full Xcode — Command Line Tools alone won't run it.
 
 ```
 Sources/Atrium/
-├── main.swift          # Entry point (accessory app, no Dock icon)
-├── AppDelegate.swift   # Menu bar item + app lifecycle
-└── SpaceCycler.swift   # Pure space-cycling arithmetic with wraparound (tested)
+├── main.swift                # Entry point (accessory app, no Dock icon)
+├── AppDelegate.swift         # Menu bar item, permission prompt, shortcut wiring
+├── HotKeyCenter.swift        # Global shortcuts via Carbon RegisterEventHotKey
+├── SelectionCycler.swift     # Pure wraparound selection arithmetic (tested)
+├── AccessibilityWindow.swift # AX wrapper: titles, minimized state, raise/focus
+├── WindowEnumerator.swift    # Every app's windows, z-ordered (ordering core tested)
+├── PreviewLoader.swift       # Async window screenshots via ScreenCaptureKit
+├── SwitcherController.swift  # Show → cycle → commit lifecycle of the switcher
+└── SwitcherPanel.swift       # The layered overlay panel and its item views
 ```
 
 ## Roadmap
 
-- **Task-space model** — which windows belong to which task, persisted across relaunches.
-- **Switcher UI** — a global-shortcut panel to jump between spaces (the wraparound cycling in
-  `SpaceCycler` drives next/previous).
-- **Window capture/restore** — via the Accessibility API, the same machinery Oriel uses.
-- **Settings** — launch at login, shortcuts (the System Settings–style sidebar window the
-  sibling apps use).
+- **Recency ordering** — most-recently-used order across invocations, like the system switcher.
+- **Configurable shortcuts** — the recorder + System Settings–style window the sibling apps use.
+- **More gestures** — close/minimize the selected window from the switcher, per-app cycling.
+- **Overflow handling** — scroll or shrink when the window count outgrows the screen.
