@@ -5,5 +5,26 @@
   <channel>
     <title>Atrium</title>
     <link>https://github.com/domus-apps/atrium</link>
+    <item>
+      <title>Atrium v1.0.0</title>
+      <link>https://github.com/domus-apps/atrium/releases/tag/v1.0.0</link>
+      <pubDate>Wed, 26 Aug 2026 12:46:07 +0000</pubDate>
+      <description><![CDATA[
+<ul>
+<li>Initial release: hold ⌥ and tap Tab to switch between windows — every window of every app, minimized and hidden ones included, on whichever screen your cursor is.</li>
+<li>Live window previews on every card, streaming in as they capture; off-screen windows (minimized, hidden, other Spaces) are pictured from the window server's retained backing store, and previews persist across relaunches.</li>
+<li>⌥<code class="notranslate"> scopes the switcher to the frontmost app's own windows, like the system's ⌘</code> but with the full panel.</li>
+<li>Cycle with Tab (hold to repeat, ⇧ for backwards), move with the arrow keys, hover or click with the mouse, commit with Return or by releasing ⌥, cancel with Escape.</li>
+<li>A clear Liquid Glass panel that adapts to light and dark mode, in the Domus family's visual language.</li>
+<li>First-run onboarding gates on the Accessibility permission (Screen Recording optional, for previews), and Sparkle keeps the app up to date.</li>
+</ul>      ]]></description>
+      <sparkle:version>1</sparkle:version>
+      <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/domus-apps/atrium/releases/download/v1.0.0/Atrium.zip"
+        sparkle:edSignature="9vpzEWUoPrf4h0yzSC/jsq9sEVVtO0EDpbxp+Mqe121RXWJlqpb7F38uGqUQ5QLl7iQMZtkxgaQPVi2gI7x2Ag==" length="2670598"
+        type="application/octet-stream"/>
+    </item>
   </channel>
 </rss>
