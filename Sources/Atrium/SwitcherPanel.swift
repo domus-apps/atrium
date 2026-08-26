@@ -12,18 +12,18 @@ import AppKit
 final class SwitcherPanel: NSPanel {
     private static let cornerRadius: CGFloat = 48
     /* "Hidden" alpha: at exactly 0 the window server detaches the window
-       and the next reveal re-commits stock glass material — 1% keeps it
-       attached while being imperceptible. */
-    private static let hiddenAlpha: CGFloat = 0.01
+       and the next reveal re-commits stock glass material — a hair above
+       zero keeps it attached. As small as possible: this panel is large,
+       and on dark backdrops even 1% of a bright glass face reads as a
+       ghost. The content is also stripped while hidden (see dismiss), so
+       what remains at this alpha is bare glass. */
+    private static let hiddenAlpha: CGFloat = 0.002
 
     var onItemClick: ((Int) -> Void)?
     var onItemHover: ((Int) -> Void)?
     /// Whether the switcher is currently presented. Not `isVisible`: the
     /// panel stays ordered in at 1% alpha forever (see hiddenAlpha).
     private(set) var isPresented = false
-    /// Items per full row in the current layout — the stride for moving
-    /// the selection vertically with the arrow keys.
-    private(set) var columns = 1
 
     private let glass = NSGlassEffectView()
     /* The cards live in a SIBLING above the glass, not in glass.contentView:
@@ -119,10 +119,12 @@ final class SwitcherPanel: NSPanel {
     /// Sizes and populates the dormant panel without presenting it. Called
     /// once shortly after launch: the first real show then (usually) needs
     /// no resize, and it's the resize that momentarily flashes stock
-    /// frosted material before the re-tune lands.
+    /// frosted material before the re-tune lands. Only the SIZE needs to
+    /// persist — the content is stripped again right away (see dismiss).
     func preLayout(windows: [SwitcherWindow], on screen: NSScreen) {
         guard !isPresented else { return }
         layout(windows: windows, on: screen)
+        clearContent()
     }
 
     private func layout(windows: [SwitcherWindow], on screen: NSScreen) {
@@ -177,14 +179,25 @@ final class SwitcherPanel: NSPanel {
     }
 
     /* Alpha-only, never to zero, never ordered out: both would reset the
-       tuned material (see init). */
+       tuned material (see init). The cards and rim are stripped so nothing
+       bright lingers in the near-invisible dormant window — on dark
+       backdrops even a fraction of a percent of white content shows as an
+       afterimage, while bare glass does not. */
     func dismiss() {
         isPresented = false
         ignoresMouseEvents = true
+        clearContent()
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0
             animator().alphaValue = Self.hiddenAlpha
         }
+    }
+
+    private func clearContent() {
+        gridHost.subviews.forEach { $0.removeFromSuperview() }
+        itemViews = []
+        rim?.removeFromSuperview()
+        rim = nil
     }
 
     func select(_ index: Int) {
@@ -196,6 +209,30 @@ final class SwitcherPanel: NSPanel {
     func setPreview(_ image: NSImage, at index: Int) {
         guard itemViews.indices.contains(index) else { return }
         itemViews[index].showPreview(image)
+    }
+
+    /// The item one visual row above (`rowStep` -1) or below (+1) `index` —
+    /// the one whose horizontal center is nearest. Rows are centered, so a
+    /// partial last row's items sit BETWEEN the columns above them; index
+    /// arithmetic (± items-per-row) would land visibly sideways, while the
+    /// geometric nearest-center match moves where the eye expects.
+    func itemIndex(rowStep step: Int, from index: Int) -> Int? {
+        guard itemViews.indices.contains(index) else { return nil }
+        let current = itemViews[index].frame
+        /* Visual rows, top to bottom (AppKit's y grows upward). */
+        let rowYs = Set(itemViews.map(\.frame.midY)).sorted(by: >)
+        guard
+            let currentRow = rowYs.firstIndex(where: { abs($0 - current.midY) < 1 }),
+            rowYs.indices.contains(currentRow + step)
+        else { return nil }
+        let targetY = rowYs[currentRow + step]
+        return itemViews.enumerated()
+            .filter { abs($0.element.frame.midY - targetY) < 1 }
+            .min {
+                abs($0.element.frame.midX - current.midX)
+                    < abs($1.element.frame.midX - current.midX)
+            }?
+            .offset
     }
 
     /* Rows wrap at the width limit and each row is centered, so a partial
@@ -211,7 +248,6 @@ final class SwitcherPanel: NSPanel {
         let fitting = Int((maxWidth - 2 * padding + spacing) / (item.width + spacing))
         let perRow = max(1, min(count, fitting))
         let rows = (count + perRow - 1) / perRow
-        columns = perRow
 
         let width = CGFloat(perRow) * (item.width + spacing) - spacing + 2 * padding
         let height = CGFloat(rows) * (item.height + spacing) - spacing + 2 * padding
@@ -283,9 +319,13 @@ final class SwitcherPanel: NSPanel {
            transfer drops, nothing else about the material changes. */
         let isDark =
             effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        let white = isDark ? 0.76 : 0.96
-        let black = isDark ? 0.07 : 0.09
-        let maxLuma = isDark ? 0.72 : 0.92
+        /* Light mode's `black` is deliberately lifted well off zero, plus a
+           touch of white fill below: a dark window behind the panel would
+           otherwise pass through nearly black and swallow the black labels. */
+        let white = isDark ? 0.76 : 0.98
+        let black = isDark ? 0.07 : 0.18
+        let maxLuma = isDark ? 0.72 : 0.95
+        let fillAlpha = isDark ? 0.0 : 0.10
         backdrop.setValue(
             white + epsilon, forKeyPath: "filters.glassBackground.inputFaceColorMatrixWhite")
         backdrop.setValue(
@@ -299,7 +339,7 @@ final class SwitcherPanel: NSPanel {
             maxLuma + epsilon,
             forKeyPath: "filters.glassBackground.inputFaceColorMatrixMaxLumaSDR")
         backdrop.setValue(
-            NSColor.white.withAlphaComponent(0).cgColor,
+            NSColor.white.withAlphaComponent(fillAlpha).cgColor,
             forKeyPath: "filters.glassBackground.inputFaceColorMatrixFillColor")
         backdrop.setValue(
             0.25 + epsilon, forKeyPath: "filters.glassBackground.inputBlurRadius")
@@ -417,9 +457,10 @@ final class SwitcherPanel: NSPanel {
 /* One window in the grid: a window preview above a title line, with the
    owning app's icon as a badge. Cards seed from the preview cache so
    reopening the switcher never flashes back to icons; a fresh capture
-   replaces the image in place when it lands. Only windows that were never
-   captured (first sight while minimized, or no Screen Recording permission)
-   show the centered app icon, dimmed for windows not on screen.
+   replaces the image in place when it lands (off-screen windows included,
+   via the SkyLight backing-store path). The centered app icon only shows
+   when every capture path came up empty — most commonly without Screen
+   Recording permission — dimmed for windows not on screen.
 
    Colors are semantic: black-on-bright-glass in light mode, white-on-dark
    in dark mode, matching the panel's appearance-dependent material. */
@@ -429,21 +470,39 @@ final class SwitcherItemView: NSView {
         x: 8, y: 32,
         width: PreviewLoader.thumbnailBox.width, height: PreviewLoader.thumbnailBox.height)
 
+    private let highlightView = NSView()
     private let thumbnailView = NSImageView()
     private let placeholderIcon = NSImageView()
     private let badgeIcon = NSImageView()
+    private let label = NSTextField(labelWithString: "")
+    private let title: String
+    private let titleColor: NSColor
 
     var onClick: (() -> Void)?
     var onHover: (() -> Void)?
     var isSelected = false {
-        didSet { needsDisplay = true }
+        didSet {
+            highlightView.isHidden = !isSelected
+            needsDisplay = true
+            updateLabel()
+        }
     }
 
     init(window: SwitcherWindow) {
+        title = window.title
+        titleColor = window.isBackground ? .secondaryLabelColor : .labelColor
         super.init(frame: NSRect(origin: .zero, size: Self.size))
         wantsLayer = true
-        layer?.cornerRadius = 14
-        layer?.cornerCurve = .continuous
+
+        /* The selection scrim hugs the preview area only, leaving the title
+           line below it unhighlighted. 8pt of air on every side (its bottom
+           edge just meets the label frame's top) with a generous corner. */
+        highlightView.frame = Self.thumbnailFrame.insetBy(dx: -8, dy: -8)
+        highlightView.wantsLayer = true
+        highlightView.layer?.cornerRadius = 16
+        highlightView.layer?.cornerCurve = .continuous
+        highlightView.isHidden = true
+        addSubview(highlightView)
 
         thumbnailView.frame = Self.thumbnailFrame
         thumbnailView.imageScaling = .scaleProportionallyDown
@@ -471,12 +530,8 @@ final class SwitcherItemView: NSView {
         badgeIcon.isHidden = true
         addSubview(badgeIcon)
 
-        let label = NSTextField(labelWithString: window.title)
-        label.font = .systemFont(ofSize: 11.5)
-        label.alignment = .center
-        label.lineBreakMode = .byTruncatingTail
-        label.textColor = window.isBackground ? .secondaryLabelColor : .labelColor
         label.frame = NSRect(x: 8, y: 8, width: Self.size.width - 16, height: 16)
+        updateLabel()
         addSubview(label)
 
         /* Last-known preview, immediately: keeps reopening flicker-free and
@@ -497,6 +552,25 @@ final class SwitcherItemView: NSView {
         badgeIcon.isHidden = false
     }
 
+    /* Selection emboldens the title WITHOUT reflow: a real bold font has
+       wider glyphs, which would shift the centered text and move the
+       truncation point. A negative strokeWidth instead outlines each glyph
+       in its own fill color — visually bold, metrically identical. */
+    private func updateLabel() {
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .center
+        paragraph.lineBreakMode = .byTruncatingTail
+        var attributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 11.5),
+            .foregroundColor: titleColor,
+            .paragraphStyle: paragraph,
+        ]
+        if isSelected {
+            attributes[.strokeWidth] = -4.5
+        }
+        label.attributedStringValue = NSAttributedString(string: title, attributes: attributes)
+    }
+
     override var wantsUpdateLayer: Bool { true }
 
     override func updateLayer() {
@@ -509,7 +583,7 @@ final class SwitcherItemView: NSView {
             isDark
             ? NSColor.white.withAlphaComponent(0.35)
             : NSColor.black.withAlphaComponent(0.25)
-        layer?.backgroundColor = isSelected ? highlight.cgColor : nil
+        highlightView.layer?.backgroundColor = highlight.cgColor
     }
 
     override func mouseUp(with event: NSEvent) {

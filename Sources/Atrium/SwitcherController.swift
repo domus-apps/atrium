@@ -23,6 +23,7 @@ final class SwitcherController {
     private var previewTask: Task<Void, Never>?
     private var repeatTimer: Timer?
     private var nextRepeatAt: Date?
+    private var heldRepeatKey: Int?
     private var mouseAtShow = NSPoint.zero
 
     init() {
@@ -92,7 +93,9 @@ final class SwitcherController {
         selection = landing(from: 0, step: step)
         mouseAtShow = NSEvent.mouseLocation
         panel.show(windows: windows, selectedIndex: selection, on: screen)
-        previewTask = PreviewLoader.load(for: windows) { [weak self] index, image in
+        previewTask = PreviewLoader.load(
+            for: windows, isCompleteList: scope == .allWindows
+        ) { [weak self] index, image in
             self?.panel.setPreview(image, at: index)
         }
         installOptionReleaseMonitors()
@@ -113,11 +116,12 @@ final class SwitcherController {
         panel.select(selection)
     }
 
-    /* Arrow up/down: one full row at a time, stopping at the edges (a
-       vertical wraparound would feel like teleporting in a grid). */
+    /* Arrow up/down: one visual row at a time, stopping at the edges (a
+       vertical wraparound would feel like teleporting in a grid). The panel
+       resolves the target geometrically — rows are centered, so "the item
+       above" is a matter of on-screen position, not index arithmetic. */
     private func moveRow(_ step: Int) {
-        let target = selection + step * panel.columns
-        guard windows.indices.contains(target) else { return }
+        guard let target = panel.itemIndex(rowStep: step, from: selection) else { return }
         selection = target
         panel.select(selection)
     }
@@ -147,37 +151,55 @@ final class SwitcherController {
     }
 
     /* Carbon hotkeys fire once per press — no autorepeat events — so
-       holding Tab is detected by polling the key's physical state while
-       the panel is up, mimicking the system repeat feel (an initial delay,
-       then a steady cadence). Shift is read per repeat, so pressing or
-       releasing it mid-hold flips the direction immediately. */
+       holding a cycle key (Tab, `, or an arrow) is detected by polling its
+       physical state while the panel is up, mimicking the system repeat
+       feel (an initial delay, then a steady cadence). Shift is read per
+       repeat, so pressing or releasing it mid-hold flips the Tab direction
+       immediately. */
     private func startRepeatTimer() {
         nextRepeatAt = nil
-        repeatTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) {
+        heldRepeatKey = nil
+        /* The tick quantizes the repeat interval, so it must be well finer
+           than the cadence for the cadence to be real. */
+        repeatTimer = Timer.scheduledTimer(withTimeInterval: 0.03, repeats: true) {
             [weak self] _ in
             guard let self else { return }
-            let cycleKeyDown =
-                CGEventSource.keyState(.combinedSessionState, key: CGKeyCode(kVK_Tab))
-                || CGEventSource.keyState(
-                    .combinedSessionState, key: CGKeyCode(kVK_ANSI_Grave))
-            guard cycleKeyDown else {
+            guard let held = heldRepeatAction() else {
+                heldRepeatKey = nil
                 nextRepeatAt = nil
                 return
             }
             let now = Date()
-            guard let due = nextRepeatAt else {
-                /* The press itself already advanced via the hotkey; start
-                   the repeat clock. */
-                nextRepeatAt = now.addingTimeInterval(0.35)
+            if held.key != heldRepeatKey || nextRepeatAt == nil {
+                /* Fresh hold (or the held key changed): the press itself
+                   already acted via its hotkey — just start the clock. */
+                heldRepeatKey = held.key
+                nextRepeatAt = now.addingTimeInterval(0.3)
                 return
             }
-            if now >= due {
-                let backward = CGEventSource.flagsState(.combinedSessionState)
-                    .contains(.maskShift)
-                advance(backward ? -1 : 1)
-                nextRepeatAt = now.addingTimeInterval(0.1)
+            if let due = nextRepeatAt, now >= due {
+                held.run()
+                nextRepeatAt = now.addingTimeInterval(0.07)
             }
         }
+    }
+
+    /// The repeat-eligible key currently held, with its per-repeat action.
+    /// First match wins when several are down at once.
+    private func heldRepeatAction() -> (key: Int, run: () -> Void)? {
+        func down(_ key: Int) -> Bool {
+            CGEventSource.keyState(.combinedSessionState, key: CGKeyCode(key))
+        }
+        if down(kVK_Tab) || down(kVK_ANSI_Grave) {
+            let backward = CGEventSource.flagsState(.combinedSessionState)
+                .contains(.maskShift)
+            return (kVK_Tab, { [weak self] in self?.advance(backward ? -1 : 1) })
+        }
+        if down(kVK_LeftArrow) { return (kVK_LeftArrow, { [weak self] in self?.advance(-1) }) }
+        if down(kVK_RightArrow) { return (kVK_RightArrow, { [weak self] in self?.advance(1) }) }
+        if down(kVK_UpArrow) { return (kVK_UpArrow, { [weak self] in self?.moveRow(-1) }) }
+        if down(kVK_DownArrow) { return (kVK_DownArrow, { [weak self] in self?.moveRow(1) }) }
+        return nil
     }
 
     private func landing(from index: Int, step: Int) -> Int {
@@ -228,6 +250,7 @@ final class SwitcherController {
         repeatTimer?.invalidate()
         repeatTimer = nil
         nextRepeatAt = nil
+        heldRepeatKey = nil
         for monitor in flagsMonitors {
             NSEvent.removeMonitor(monitor)
         }
