@@ -4,7 +4,7 @@ All notable changes to Atrium are documented here. The release workflow publishe
 
 Keep each bullet on a single line: release notes render line breaks literally (both on GitHub and in the update dialog), so wrapped lines would break mid-sentence.
 
-## 0.1.0
+## 1.0.0
 
 - Initial release: hold ⌥ and tap Tab to switch between windows — every window of every app, minimized and hidden ones included, on whichever screen your cursor is.
 - Live window previews on every card, streaming in as they capture; off-screen windows (minimized, hidden, other Spaces) are pictured from the window server's retained backing store, and previews persist across relaunches.
