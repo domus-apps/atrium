@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sparkle update feed. Release entries are appended automatically by the
+     release workflow (Scripts/appcast-add.sh) — don't edit by hand. -->
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>Atrium</title>
+    <link>https://github.com/domus-apps/atrium</link>
+  </channel>
+</rss>

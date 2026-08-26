@@ -14,6 +14,10 @@
 	<string>0.1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>SUFeedURL</key>
+	<string>https://raw.githubusercontent.com/domus-apps/atrium/main/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>231/UKP6u5LElqtTkMp2TwNDsr83lQSxVCiJ4UUMR7I=</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>26.0</string>
 	<key>LSUIElement</key>

@@ -9,10 +9,29 @@ let package = Package(
        from the deployment target, so the target must be >= 26 for the app
        to get the native current-OS appearance. */
     platforms: [.macOS("26.0")],
+    dependencies: [
+        .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.9.6")
+    ],
     targets: [
         .executableTarget(
             name: "Atrium",
-            path: "Sources/Atrium"
+            dependencies: [
+                .product(name: "Sparkle", package: "Sparkle")
+            ],
+            path: "Sources/Atrium",
+            linkerSettings: [
+                /* Two rpaths for the two places Sparkle.framework lives:
+                   ../Frameworks for the bundled app (Scripts/bundle.sh embeds
+                   it at Contents/Frameworks), and the executable's own dir
+                   for `swift run` — Xcode 26's build system stages the
+                   framework next to the binary but writes no rpath for it. */
+                .unsafeFlags([
+                    "-Xlinker", "-rpath",
+                    "-Xlinker", "@executable_path/../Frameworks",
+                    "-Xlinker", "-rpath",
+                    "-Xlinker", "@executable_path",
+                ])
+            ]
         ),
         .testTarget(
             name: "AtriumTests",

@@ -11,6 +11,12 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp .build/release/Atrium "$APP/Contents/MacOS/Atrium"
 cp Scripts/Info.plist "$APP/Contents/Info.plist"
 
+# Embed Sparkle.framework (auto-update). The binary references it via
+# @rpath/../Frameworks (see Package.swift linkerSettings).
+SPARKLE=$(find .build/artifacts -type d -name Sparkle.framework -path "*macos*" | head -1)
+mkdir -p "$APP/Contents/Frameworks"
+cp -R "$SPARKLE" "$APP/Contents/Frameworks/"
+
 # Compile the Icon Composer document into Assets.car so macOS 26+ renders
 # the icon live with the Liquid Glass treatment (dark/clear/tinted variants).
 if [[ -d Assets/AppIcon.icon ]]; then
@@ -31,10 +37,20 @@ fi
 # Otherwise fall back to ad-hoc, which keeps any future TCC grants stable
 # across rebuilds on this machine.
 if [[ -n "${CODESIGN_IDENTITY:-}" ]]; then
-    codesign --force --options runtime --timestamp --sign "$CODESIGN_IDENTITY" "$APP"
+    SIGN=(codesign --force --options runtime --timestamp --sign "$CODESIGN_IDENTITY")
 else
-    codesign --force --sign - "$APP"
+    SIGN=(codesign --force --options runtime --sign -)
 fi
+
+# Sparkle's helpers must be signed individually, innermost first
+# (https://sparkle-project.org/documentation/sandboxing/#code-signing).
+FW="$APP/Contents/Frameworks/Sparkle.framework"
+"${SIGN[@]}" --preserve-metadata=entitlements "$FW/Versions/B/XPCServices/Downloader.xpc"
+"${SIGN[@]}" "$FW/Versions/B/XPCServices/Installer.xpc"
+"${SIGN[@]}" "$FW/Versions/B/Autoupdate"
+"${SIGN[@]}" "$FW/Versions/B/Updater.app"
+"${SIGN[@]}" "$FW"
+"${SIGN[@]}" "$APP"
 
 echo "Built $APP"
 echo "Run:  open $APP"
