@@ -6,12 +6,12 @@
     {
       "layers" : [
         {
-          "image-name" : "back.png",
-          "name" : "back"
-        },
-        {
           "image-name" : "front.png",
           "name" : "front"
+        },
+        {
+          "image-name" : "back.png",
+          "name" : "back"
         }
       ]
     }
