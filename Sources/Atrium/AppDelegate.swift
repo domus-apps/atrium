@@ -4,45 +4,44 @@ import Carbon.HIToolbox
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let hotKeys = HotKeyCenter()
     private let switcher = SwitcherController()
+    private let updater = UpdaterController()
     private var statusItem: NSStatusItem?
+    private var onboardingController: OnboardingWindowController?
+
+    private static let onboardingCompletedKey = "onboarding.completed"
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        ensureAccessibilityPermission()
-        ensureScreenRecordingPermission()
+        setUpMainMenu()
         setUpStatusItem()
         registerShortcuts()
-    }
 
-    /* Window previews capture via ScreenCaptureKit, which sits behind the
-       Screen Recording permission. Not strictly required — without it the
-       switcher falls back to app icons — so only nudge, never block. The
-       system prompts just once; afterwards it's a manual Settings toggle,
-       and granting takes effect on the next launch. */
-    private func ensureScreenRecordingPermission() {
-        if !CGPreflightScreenCaptureAccess() {
-            NSLog(
-                "Atrium: no Screen Recording permission — window previews are "
-                    + "disabled, showing app icons. Grant it in System Settings > "
-                    + "Privacy & Security > Screen & System Audio Recording, then relaunch."
-            )
-            CGRequestScreenCaptureAccess()
+        /* The permission asks live inside onboarding — no launch-time
+           prompts. Completion is only recorded when onboarding is finished
+           properly, so an interrupted (or force-quit) run shows it again. */
+        if !UserDefaults.standard.bool(forKey: Self.onboardingCompletedKey)
+            || CommandLine.arguments.contains("--onboarding")
+        {
+            showOnboarding()
+        }
+
+        /* Same report as the menu's Copy Diagnostics, to stdout. */
+        if CommandLine.arguments.contains("--diagnose") {
+            Task {
+                print(await PreviewLoader.diagnostics())
+                await MainActor.run { NSApp.terminate(nil) }
+            }
         }
     }
 
-    /* Window enumeration, raising, and the Option-release monitor all sit on
-       the Accessibility API — without the grant the switcher shows nothing. */
-    private func ensureAccessibilityPermission() {
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
-        let trusted = AXIsProcessTrustedWithOptions(options as CFDictionary)
-        NSLog("Atrium: launched from %@ — Accessibility %@.",
-            Bundle.main.bundlePath, trusted ? "granted" : "NOT granted")
-        if !trusted {
-            NSLog(
-                "Atrium: waiting for Accessibility permission. "
-                    + "Grant it in System Settings > Privacy & Security > Accessibility, "
-                    + "then press Option+Tab again."
-            )
+    private func showOnboarding() {
+        if onboardingController == nil {
+            onboardingController = OnboardingWindowController { [weak self] in
+                UserDefaults.standard.set(true, forKey: Self.onboardingCompletedKey)
+                self?.onboardingController = nil
+            }
         }
+        NSApp.activate(ignoringOtherApps: true)
+        onboardingController?.window?.makeKeyAndOrderFront(nil)
     }
 
     private func registerShortcuts() {
@@ -68,6 +67,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    /* An accessory app has no visible menu bar, but ⌘-key equivalents are
+       still dispatched through the main menu — without one, ⌘Q does nothing
+       while the onboarding window is frontmost. */
+    private func setUpMainMenu() {
+        let appMenu = NSMenu()
+        appMenu.addItem(updater.makeMenuItem())
+        appMenu.addItem(.separator())
+        appMenu.addItem(
+            NSMenuItem(
+                title: "Quit Atrium",
+                action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+
+        let mainMenu = NSMenu()
+        let item = NSMenuItem()
+        item.submenu = appMenu
+        mainMenu.addItem(item)
+        NSApp.mainMenu = mainMenu
+    }
+
     private func setUpStatusItem() {
         /* A fixed length instead of squareLength: square items are as wide
            as the menu bar is tall, which pads a ~18pt symbol with a lot of
@@ -88,10 +106,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             menu.addItem(hint)
         }
         menu.addItem(.separator())
+        let onboardingItem = NSMenuItem(
+            title: "Show Welcome Guide…", action: #selector(reopenOnboarding),
+            keyEquivalent: "")
+        onboardingItem.target = self
+        menu.addItem(onboardingItem)
+        menu.addItem(updater.makeMenuItem())
+        /* Remote-debugging aid: one click copies a preview-capture report
+           (permission state and a per-window verdict) for pasting back. */
+        let diagnosticsItem = NSMenuItem(
+            title: "Copy Diagnostics", action: #selector(copyDiagnostics), keyEquivalent: "")
+        diagnosticsItem.target = self
+        menu.addItem(diagnosticsItem)
+        menu.addItem(.separator())
         menu.addItem(NSMenuItem(
             title: "Quit Atrium",
             action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         item.menu = menu
         statusItem = item
+    }
+
+    @objc private func reopenOnboarding() {
+        showOnboarding()
+    }
+
+    @objc private func copyDiagnostics() {
+        Task {
+            let report = await PreviewLoader.diagnostics()
+            await MainActor.run {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(report, forType: .string)
+                NSSound(named: "Glass")?.play()
+            }
+        }
     }
 }
