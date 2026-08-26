@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Assets/banner.png" alt="Atrium — Multitasking, with room to breathe" />
+  <img src="Assets/banner.png" alt="Atrium — Every window at a glance" />
 </p>
 
 <p align="center">

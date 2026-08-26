@@ -319,7 +319,7 @@ func drawBanner(_ cg: CGContext, icon: CGImage) {
     ])
     title.draw(at: NSPoint(x: 520, y: 268))
 
-    let tagline = NSAttributedString(string: "Multitasking, with room to breathe", attributes: [
+    let tagline = NSAttributedString(string: "Every window at a glance", attributes: [
         .font: NSFont.systemFont(ofSize: 46, weight: .medium),
         .foregroundColor: NSColor(srgbRed: 0.92, green: 0.68, blue: 0.78, alpha: 1),
     ])
@@ -369,7 +369,7 @@ func drawSocialPreview(_ cg: CGContext, icon: CGImage) {
         ]), y: 180)
 
     drawCentered(
-        NSAttributedString(string: "Multitasking, with room to breathe", attributes: [
+        NSAttributedString(string: "Every window at a glance", attributes: [
             .font: NSFont.systemFont(ofSize: 38, weight: .medium),
             .foregroundColor: NSColor(srgbRed: 0.92, green: 0.68, blue: 0.78, alpha: 1),
         ]), y: 118)
