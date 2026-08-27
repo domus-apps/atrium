@@ -26,5 +26,21 @@
         sparkle:edSignature="9vpzEWUoPrf4h0yzSC/jsq9sEVVtO0EDpbxp+Mqe121RXWJlqpb7F38uGqUQ5QLl7iQMZtkxgaQPVi2gI7x2Ag==" length="2670598"
         type="application/octet-stream"/>
     </item>
+    <item>
+      <title>Atrium v1.0.1</title>
+      <link>https://github.com/domus-apps/atrium/releases/tag/v1.0.1</link>
+      <pubDate>Thu, 27 Aug 2026 02:01:57 +0000</pubDate>
+      <description><![CDATA[
+<ul>
+<li>Fixed: installing by COPYING the app (instead of Finder-moving it) left it running from Gatekeeper's translocated read-only path, which blocked Sparkle updates — the app now detects this at launch, clears the quarantine flag, and relaunches itself from its real location.</li>
+</ul>      ]]></description>
+      <sparkle:version>2</sparkle:version>
+      <sparkle:shortVersionString>1.0.1</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/domus-apps/atrium/releases/download/v1.0.1/Atrium.zip"
+        sparkle:edSignature="kkU2y2SPl5p+jSUNbnmWT6pggqOMlpbqefAEeF30sjTu2Ae99KhxVlVhOJqguaM+U9ayOPPspilR3tu3L5FgDg==" length="2690117"
+        type="application/octet-stream"/>
+    </item>
   </channel>
 </rss>
