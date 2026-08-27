@@ -159,6 +159,25 @@ jobs:
           git commit -m "Publish v$VERSION to appcast"
           git push origin main
 
+      # Nudge the suite bundle (Domus.zip) to rebuild with this release.
+      # Needs the SUITE_DISPATCH_TOKEN org secret (a PAT that can send
+      # repository_dispatch to domus-apps/suite); without it the daily
+      # scheduled rebuild still picks the release up.
+      - name: Notify the suite bundle
+        if: github.ref_type == 'tag'
+        env:
+          DISPATCH_TOKEN: ${{ secrets.SUITE_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$DISPATCH_TOKEN" ]; then
+            echo "SUITE_DISPATCH_TOKEN not set; the scheduled bundle rebuild will pick this up."
+            exit 0
+          fi
+          curl -sf -X POST \
+            -H "Authorization: Bearer $DISPATCH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/domus-apps/suite/dispatches \
+            -d '{"event_type":"app-release"}'
+
       # For manual (workflow_dispatch) runs, keep the app as a build artifact
       # instead of publishing a release.
       - name: Upload artifact
