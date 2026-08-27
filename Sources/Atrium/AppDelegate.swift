@@ -6,14 +6,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let switcher = SwitcherController()
     private let updater = UpdaterController()
     private var statusItem: NSStatusItem?
+    private var settingsWindowController: SettingsWindowController?
     private var onboardingController: OnboardingWindowController?
 
     private static let onboardingCompletedKey = "onboarding.completed"
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        /* A translocated launch relaunches itself from the real bundle —
+           nothing else must start in this doomed instance. */
+        if TranslocationHealer.healIfNeeded() { return }
+
         setUpMainMenu()
-        setUpStatusItem()
+        observePreferenceChanges()
+        updateStatusItemVisibility()
         registerShortcuts()
+
+        if CommandLine.arguments.contains("--settings") {
+            openSettings()
+        }
 
         /* The permission asks live inside onboarding — no launch-time
            prompts. Completion is only recorded when onboarding is finished
@@ -31,6 +41,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 await MainActor.run { NSApp.terminate(nil) }
             }
         }
+    }
+
+    /* Launching the app again while it's already running sends "reopen" to
+       the live instance. With the menu bar icon hidden this is the only way
+       back into the UI, so surface Settings (which also puts the app in the
+       Dock via updateActivationPolicy). */
+    func applicationShouldHandleReopen(
+        _ sender: NSApplication, hasVisibleWindows: Bool
+    ) -> Bool {
+        if AppPreferences.isMenuBarIconHidden {
+            openSettings()
+        }
+        return false
     }
 
     private func showOnboarding() {
@@ -72,6 +95,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
        while the onboarding window is frontmost. */
     private func setUpMainMenu() {
         let appMenu = NSMenu()
+        let settingsItem = NSMenuItem(
+            title: "Settings…", action: #selector(openSettings), keyEquivalent: ",")
+        settingsItem.target = self
+        appMenu.addItem(settingsItem)
         appMenu.addItem(updater.makeMenuItem())
         appMenu.addItem(.separator())
         appMenu.addItem(
@@ -111,6 +138,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             keyEquivalent: "")
         onboardingItem.target = self
         menu.addItem(onboardingItem)
+        let settingsMenuItem = NSMenuItem(
+            title: "Settings…", action: #selector(openSettings), keyEquivalent: ",")
+        settingsMenuItem.target = self
+        menu.addItem(settingsMenuItem)
         menu.addItem(updater.makeMenuItem())
         /* Remote-debugging aid: one click copies a preview-capture report
            (permission state and a per-window verdict) for pasting back. */
@@ -124,6 +155,66 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         item.menu = menu
         statusItem = item
+    }
+
+    private func observePreferenceChanges() {
+        NotificationCenter.default.addObserver(
+            forName: AppPreferences.changed, object: nil, queue: .main
+        ) { [weak self] _ in
+            self?.updateStatusItemVisibility()
+        }
+    }
+
+    private func updateStatusItemVisibility() {
+        if AppPreferences.isMenuBarIconHidden {
+            if let statusItem {
+                NSStatusBar.system.removeStatusItem(statusItem)
+            }
+            statusItem = nil
+        } else if statusItem == nil {
+            setUpStatusItem()
+        }
+        updateActivationPolicy()
+    }
+
+    private var isSettingsWindowVisible: Bool {
+        settingsWindowController?.window?.isVisible == true
+    }
+
+    /* Dock presence: the app normally stays invisible (accessory policy),
+       but while the menu bar icon is hidden AND Settings is open there would
+       be no sign the app is running — so it joins the Dock for the duration
+       and leaves again when the settings window closes. */
+    private func updateActivationPolicy() {
+        let wantsDock = AppPreferences.isMenuBarIconHidden && isSettingsWindowVisible
+        let policy: NSApplication.ActivationPolicy = wantsDock ? .regular : .accessory
+        guard NSApp.activationPolicy() != policy else { return }
+        NSApp.setActivationPolicy(policy)
+        /* Flipping the policy can drop activation; keep Settings in front. */
+        if isSettingsWindowVisible {
+            NSApp.activate(ignoringOtherApps: true)
+            settingsWindowController?.window?.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    @objc private func openSettings() {
+        if settingsWindowController == nil {
+            settingsWindowController = SettingsWindowController(updater: updater)
+            if let window = settingsWindowController?.window {
+                NotificationCenter.default.addObserver(
+                    forName: NSWindow.willCloseNotification, object: window, queue: .main
+                ) { [weak self] _ in
+                    /* isVisible is still true inside willClose; re-evaluate
+                       (and leave the Dock) on the next runloop cycle. */
+                    DispatchQueue.main.async { self?.updateActivationPolicy() }
+                }
+            }
+        }
+        /* Accessory apps don't come forward on their own — activate first or
+           the window opens behind the current app. */
+        NSApp.activate(ignoringOtherApps: true)
+        settingsWindowController?.window?.makeKeyAndOrderFront(nil)
+        updateActivationPolicy()
     }
 
     @objc private func reopenOnboarding() {
