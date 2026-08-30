@@ -2,6 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleAlternateNames</key>
+	<array>
+		<string>아트리움</string>
+		<string>애트리움</string>
+		<string>창 전환</string>
+		<string>window switcher</string>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>Atrium</string>
 	<key>CFBundleIdentifier</key>
