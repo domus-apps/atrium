@@ -42,5 +42,22 @@
         sparkle:edSignature="kkU2y2SPl5p+jSUNbnmWT6pggqOMlpbqefAEeF30sjTu2Ae99KhxVlVhOJqguaM+U9ayOPPspilR3tu3L5FgDg==" length="2690117"
         type="application/octet-stream"/>
     </item>
+    <item>
+      <title>Atrium v1.0.2</title>
+      <link>https://github.com/domus-apps/atrium/releases/tag/v1.0.2</link>
+      <pubDate>Sun, 30 Aug 2026 01:39:00 +0000</pubDate>
+      <description><![CDATA[
+<h3>Added</h3>
+<ul>
+<li>Spotlight now finds the app by its Korean name and by what it does — 아트리움, 애트리움, 창 전환, and window switcher all match.</li>
+</ul>      ]]></description>
+      <sparkle:version>3</sparkle:version>
+      <sparkle:shortVersionString>1.0.2</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/domus-apps/atrium/releases/download/v1.0.2/Atrium.zip"
+        sparkle:edSignature="P3uUGXE5barUdWasFcV5xib46ZTSwbKrWGQAxqF1qsE6NC2KsDkG3O4d37UY2ulA7YZshZndDKmc+7IKcEbJCQ==" length="2690212"
+        type="application/octet-stream"/>
+    </item>
   </channel>
 </rss>
