@@ -80,6 +80,24 @@ jobs:
       - name: Build app bundle
         run: ./Scripts/bundle.sh
 
+      # Launch the exact artifact we are about to ship and require it to
+      # survive its first seconds. Only a real launch of the CI-built app
+      # catches what testing a locally built bundle cannot — a toolchain
+      # or signing difference on this runner (Keystone 1.5.0 shipped
+      # crashing at launch for exactly that). Publishing stops here if
+      # the app dies.
+      - name: Smoke-test the launch
+        run: |
+          build/Atrium.app/Contents/MacOS/Atrium &
+          APP_PID=$!
+          sleep 5
+          if ! kill -0 "$APP_PID" 2>/dev/null; then
+            STATUS=0; wait "$APP_PID" || STATUS=$?
+            echo "::error::Atrium crashed within 5 seconds of launch (exit status $STATUS)"
+            exit 1
+          fi
+          kill "$APP_PID"
+
       - name: Zip app
         run: |
           ditto -c -k --sequesterRsrc --keepParent build/Atrium.app Atrium.zip
