@@ -42,6 +42,8 @@ jobs:
           # would let an extraction failure slip through.
           ./Scripts/changelog-extract.sh "$VERSION" > "$RUNNER_TEMP/notes.md"
           cat "$RUNNER_TEMP/notes.md"
+          ./Scripts/changelog-extract.sh "$VERSION" CHANGELOG.ko.md > "$RUNNER_TEMP/notes.ko.md"
+          cat "$RUNNER_TEMP/notes.ko.md"
 
       - name: Run tests
         run: ./Scripts/test.sh
@@ -147,12 +149,14 @@ jobs:
           # item's description.
           gh api markdown -f mode=gfm -f text="$(cat "$RUNNER_TEMP/notes.md")" \
             > "$RUNNER_TEMP/notes.html"
+          gh api markdown -f mode=gfm -f text="$(cat "$RUNNER_TEMP/notes.ko.md")" \
+            > "$RUNNER_TEMP/notes.ko.html"
           # The checkout is detached at the tag; move to main (discarding the
           # version-stamp edit) to commit the appcast entry.
           git fetch origin main
           git checkout -f -B main origin/main
           ./Scripts/appcast-add.sh "$VERSION" "$GITHUB_RUN_NUMBER" "$SIGNATURE" \
-            "$RUNNER_TEMP/notes.html"
+            "$RUNNER_TEMP/notes.html" "$RUNNER_TEMP/notes.ko.html"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add appcast.xml
