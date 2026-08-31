@@ -178,6 +178,23 @@ jobs:
             https://api.github.com/repos/domus-apps/suite/dispatches \
             -d '{"event_type":"app-release"}'
 
+      # Nudge the website to refresh its cached version labels and
+      # changelog right away (they otherwise refresh hourly). Needs the
+      # REVALIDATE_SECRET org secret; without it (or on failure) the
+      # hourly cache still catches up on its own.
+      - name: Refresh the website's release data
+        if: github.ref_type == 'tag'
+        env:
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+        run: |
+          if [ -z "$REVALIDATE_SECRET" ]; then
+            echo "REVALIDATE_SECRET not set; the hourly cache will catch up."
+            exit 0
+          fi
+          curl -sf -X POST \
+            "https://domus-apps.com/api/revalidate?secret=$REVALIDATE_SECRET" \
+            || echo "revalidate ping failed; the hourly cache will catch up."
+
       # For manual (workflow_dispatch) runs, keep the app as a build artifact
       # instead of publishing a release.
       - name: Upload artifact
