@@ -20,19 +20,19 @@ final class OnboardingWindowController: NSWindowController, NSWindowDelegate {
 
     private let accessibilityStatus = NSTextField(labelWithString: "")
     private lazy var accessibilityButton = NSButton(
-        title: "Request Accessibility Access", target: self,
+        title: L("Request Accessibility Access"), target: self,
         action: #selector(requestAccessibility))
     private lazy var accessibilityLink = NSButton(
-        title: "Open Privacy & Security Settings…", target: self,
+        title: L("Open Privacy & Security Settings…"), target: self,
         action: #selector(openAccessibilitySettings))
 
     private let recordingStatus = NSTextField(labelWithString: "")
     private lazy var recordingButton = NSButton(
-        title: "Enable Window Previews…", target: self,
+        title: L("Enable Window Previews…"), target: self,
         action: #selector(requestScreenRecording))
 
     private lazy var startButton = NSButton(
-        title: "Start Using Atrium", target: self, action: #selector(start))
+        title: L("Start Using Atrium"), target: self, action: #selector(start))
 
     init(onComplete: @escaping () -> Void) {
         self.onComplete = onComplete
@@ -72,14 +72,12 @@ final class OnboardingWindowController: NSWindowController, NSWindowDelegate {
     // MARK: - Content
 
     private func makeContent() -> NSView {
-        let title = NSTextField(labelWithString: "Welcome to Atrium")
+        let title = NSTextField(labelWithString: L("Welcome to Atrium"))
         title.font = .systemFont(ofSize: 30, weight: .bold)
 
         let intro = NSTextField(
             wrappingLabelWithString:
-                "Atrium switches between windows, not just apps: one shortcut shows "
-                + "every window of every app — minimized ones included — as live "
-                + "previews, on whichever screen your cursor is.")
+                L("Atrium switches between windows, not just apps: one shortcut shows every window of every app — minimized ones included — as live previews, on whichever screen your cursor is."))
         intro.font = .systemFont(ofSize: 14)
         intro.textColor = .secondaryLabelColor
         intro.alignment = .center
@@ -94,13 +92,13 @@ final class OnboardingWindowController: NSWindowController, NSWindowDelegate {
 
         let shortcutRow = NSStackView(
             views: [
-                labelView("Hold"),
+                labelView(L("Hold")),
                 keycap("⌥"),
-                labelView("and tap"),
+                labelView(L("and tap")),
                 keycap("⇥"),
-                labelView("— or"),
+                labelView(L("— or")),
                 keycap("`"),
-                labelView("for this app only"),
+                labelView(L("for this app only")),
             ])
         shortcutRow.orientation = .horizontal
         shortcutRow.spacing = 6
@@ -168,8 +166,8 @@ final class OnboardingWindowController: NSWindowController, NSWindowDelegate {
         let trusted = AXIsProcessTrusted()
         accessibilityStatus.stringValue =
             trusted
-            ? "✓ Accessibility access granted"
-            : "Atrium needs Accessibility access to list and raise windows."
+            ? L("✓ Accessibility access granted")
+            : L("Atrium needs Accessibility access to list and raise windows.")
         accessibilityStatus.textColor = trusted ? .systemGreen : .labelColor
         accessibilityButton.isHidden = trusted
         accessibilityLink.isHidden = trusted
@@ -180,12 +178,12 @@ final class OnboardingWindowController: NSWindowController, NSWindowDelegate {
         if recording {
             recordingStatus.stringValue =
                 screenRecordingGrantedAtLaunch
-                ? "✓ Screen Recording granted — window previews enabled"
-                : "✓ Screen Recording granted — previews start on the next launch"
+                ? L("✓ Screen Recording granted — window previews enabled")
+                : L("✓ Screen Recording granted — previews start on the next launch")
             recordingStatus.textColor = .systemGreen
         } else {
             recordingStatus.stringValue =
-                "Optional: Screen Recording shows live window previews (icons otherwise)."
+                L("Optional: Screen Recording shows live window previews (icons otherwise).")
             recordingStatus.textColor = .secondaryLabelColor
         }
         recordingButton.isHidden = recording
@@ -306,12 +304,23 @@ private final class OnboardingIllustrationView: NSView {
         panelPath.lineWidth = 1
         panelPath.stroke()
 
-        // Four preview cards; the second selected
+        // Four preview cards; the second selected. Insets are computed so
+        // the card row and the title lines sit centered in the panel.
         let cardWidth: CGFloat = 78
+        let cardHeight: CGFloat = 52
         let gap: CGFloat = 8
-        var x = panel.minX + 18
-        for index in 0..<4 {
-            let card = NSRect(x: x, y: panel.minY + 34, width: cardWidth, height: 52)
+        let cardCount = 4
+        let rowWidth = CGFloat(cardCount) * cardWidth + CGFloat(cardCount - 1) * gap
+        /* Content block: title line (5pt) + 13pt air + card (52pt). */
+        let titleHeight: CGFloat = 5
+        let titleGap: CGFloat = 13
+        let contentHeight = titleHeight + titleGap + cardHeight
+        let contentBottom = panel.minY + (panel.height - contentHeight) / 2
+        var x = panel.minX + (panel.width - rowWidth) / 2
+        for index in 0..<cardCount {
+            let card = NSRect(
+                x: x, y: contentBottom + titleHeight + titleGap,
+                width: cardWidth, height: cardHeight)
             if index == 1 {
                 let highlight = card.insetBy(dx: -5, dy: -5)
                 NSColor.black.withAlphaComponent(0.22).setFill()
@@ -331,8 +340,8 @@ private final class OnboardingIllustrationView: NSView {
             NSColor.black.withAlphaComponent(index == 1 ? 0.75 : 0.35).setFill()
             NSBezierPath(
                 roundedRect: NSRect(
-                    x: card.midX - titleWidth / 2, y: panel.minY + 16,
-                    width: titleWidth, height: 5),
+                    x: card.midX - titleWidth / 2, y: contentBottom,
+                    width: titleWidth, height: titleHeight),
                 xRadius: 2.5, yRadius: 2.5
             ).fill()
             x += cardWidth + gap

@@ -11,6 +11,10 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp .build/release/Atrium "$APP/Contents/MacOS/Atrium"
 cp Scripts/Info.plist "$APP/Contents/Info.plist"
 
+# Localizations (ko) live in the SPM resource bundle; Localization.swift
+# resolves it from Contents/Resources by hand (never via Bundle.module).
+cp -R .build/release/Atrium_Atrium.bundle "$APP/Contents/Resources/"
+
 # Embed Sparkle.framework (auto-update). The binary references it via
 # @rpath/../Frameworks (see Package.swift linkerSettings).
 SPARKLE=$(find .build/artifacts -type d -name Sparkle.framework -path "*macos*" | head -1)

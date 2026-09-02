@@ -22,7 +22,7 @@ final class UpdaterController {
        when the updater never started (non-bundled dev builds). */
     func makeCheckButton() -> NSButton {
         let button = NSButton(
-            title: "Check for Updates…", target: controller,
+            title: L("Check for Updates…"), target: controller,
             action: #selector(SPUStandardUpdaterController.checkForUpdates(_:)))
         button.isEnabled = isStarted
         return button
@@ -30,7 +30,7 @@ final class UpdaterController {
 
     func makeMenuItem() -> NSMenuItem {
         let item = NSMenuItem(
-            title: "Check for Updates…",
+            title: L("Check for Updates…"),
             action: #selector(SPUStandardUpdaterController.checkForUpdates(_:)),
             keyEquivalent: "")
         item.target = controller

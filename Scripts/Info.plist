@@ -9,6 +9,13 @@
 		<string>창 전환</string>
 		<string>window switcher</string>
 	</array>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>ko</string>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>Atrium</string>
 	<key>CFBundleIdentifier</key>

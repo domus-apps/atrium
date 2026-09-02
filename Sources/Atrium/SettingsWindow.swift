@@ -10,7 +10,7 @@ enum SettingsPane: Int, CaseIterable {
 
     var title: String {
         switch self {
-        case .general: "General"
+        case .general: L("General")
         }
     }
 
@@ -252,11 +252,11 @@ final class GeneralPaneViewController: NSViewController {
     }
 
     private lazy var launchAtLoginCheckbox = NSButton(
-        checkboxWithTitle: "Launch at login", target: self,
+        checkboxWithTitle: L("Launch at login"), target: self,
         action: #selector(toggleLaunchAtLogin))
 
     private lazy var hideMenuBarIconCheckbox = NSButton(
-        checkboxWithTitle: "Hide menu bar icon", target: self,
+        checkboxWithTitle: L("Hide menu bar icon"), target: self,
         action: #selector(toggleHideMenuBarIcon))
 
     /* SMAppService needs a real app bundle; a bare `swift run` binary has no
@@ -273,7 +273,7 @@ final class GeneralPaneViewController: NSViewController {
             launchAtLoginCheckbox.isEnabled = false
             let note = NSTextField(
                 wrappingLabelWithString:
-                    "Available in the bundled app only (Scripts/bundle.sh).")
+                    L("Available in the bundled app only (Scripts/bundle.sh)."))
             note.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
             note.textColor = .secondaryLabelColor
             views.append(note)
@@ -283,8 +283,7 @@ final class GeneralPaneViewController: NSViewController {
         views.append(hideMenuBarIconCheckbox)
         let hideNote = NSTextField(
             wrappingLabelWithString:
-                "While hidden, launch Atrium again to open Settings. "
-                + "The app appears in the Dock only while this window is open.")
+                L("While hidden, launch Atrium again to open Settings. The app appears in the Dock only while this window is open."))
         hideNote.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         hideNote.textColor = .secondaryLabelColor
         views.append(hideNote)
@@ -296,7 +295,7 @@ final class GeneralPaneViewController: NSViewController {
         let info = Bundle.main.infoDictionary
         if let version = info?["CFBundleShortVersionString"] as? String {
             let build = (info?["CFBundleVersion"] as? String).map { " (\($0))" } ?? ""
-            let versionNote = NSTextField(labelWithString: "Version \(version)\(build)")
+            let versionNote = NSTextField(labelWithString: L("Version %@", "\(version)\(build)"))
             versionNote.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
             versionNote.textColor = .secondaryLabelColor
             views.append(versionNote)

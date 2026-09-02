@@ -96,14 +96,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func setUpMainMenu() {
         let appMenu = NSMenu()
         let settingsItem = NSMenuItem(
-            title: "Settings…", action: #selector(openSettings), keyEquivalent: ",")
+            title: L("Settings…"), action: #selector(openSettings), keyEquivalent: ",")
         settingsItem.target = self
         appMenu.addItem(settingsItem)
         appMenu.addItem(updater.makeMenuItem())
         appMenu.addItem(.separator())
         appMenu.addItem(
             NSMenuItem(
-                title: "Quit Atrium",
+                title: L("Quit Atrium"),
                 action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
         let mainMenu = NSMenu()
@@ -127,31 +127,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let about = NSMenuItem(title: "Atrium \(version)", action: nil, keyEquivalent: "")
         about.isEnabled = false
         menu.addItem(about)
-        for hintTitle in ["Option+Tab to switch windows", "Option+` for this app's windows"] {
+        for hintTitle in [L("Option+Tab to switch windows"), L("Option+` for this app's windows")] {
             let hint = NSMenuItem(title: hintTitle, action: nil, keyEquivalent: "")
             hint.isEnabled = false
             menu.addItem(hint)
         }
         menu.addItem(.separator())
         let onboardingItem = NSMenuItem(
-            title: "Show Welcome Guide…", action: #selector(reopenOnboarding),
+            title: L("Show Welcome Guide…"), action: #selector(reopenOnboarding),
             keyEquivalent: "")
         onboardingItem.target = self
         menu.addItem(onboardingItem)
         let settingsMenuItem = NSMenuItem(
-            title: "Settings…", action: #selector(openSettings), keyEquivalent: ",")
+            title: L("Settings…"), action: #selector(openSettings), keyEquivalent: ",")
         settingsMenuItem.target = self
         menu.addItem(settingsMenuItem)
         menu.addItem(updater.makeMenuItem())
         /* Remote-debugging aid: one click copies a preview-capture report
            (permission state and a per-window verdict) for pasting back. */
         let diagnosticsItem = NSMenuItem(
-            title: "Copy Diagnostics", action: #selector(copyDiagnostics), keyEquivalent: "")
+            title: L("Copy Diagnostics"), action: #selector(copyDiagnostics), keyEquivalent: "")
         diagnosticsItem.target = self
         menu.addItem(diagnosticsItem)
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(
-            title: "Quit Atrium",
+            title: L("Quit Atrium"),
             action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         item.menu = menu
         statusItem = item

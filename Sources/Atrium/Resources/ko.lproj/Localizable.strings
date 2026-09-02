@@ -1,0 +1,35 @@
+/* Atrium 한국어 — 영어 원문이 키입니다 (Localization.swift 참고) */
+
+/* 메뉴 */
+"Settings…" = "설정…";
+"Check for Updates…" = "업데이트 확인…";
+"Quit Atrium" = "Atrium 종료";
+"Option+Tab to switch windows" = "Option+Tab: 창 전환";
+"Option+` for this app's windows" = "Option+`: 현재 앱의 창만";
+"Show Welcome Guide…" = "시작 가이드 다시 보기…";
+"Copy Diagnostics" = "진단 정보 복사";
+
+/* 설정 */
+"General" = "일반";
+"Launch at login" = "로그인 시 실행";
+"Hide menu bar icon" = "메뉴 막대 아이콘 숨기기";
+"Available in the bundled app only (Scripts/bundle.sh)." = "번들 앱에서만 사용할 수 있습니다 (Scripts/bundle.sh).";
+"While hidden, launch Atrium again to open Settings. The app appears in the Dock only while this window is open." = "아이콘을 숨긴 동안에는 Atrium을 다시 실행하면 설정이 열립니다. 이 창이 열려 있는 동안에만 Dock에 표시됩니다.";
+"Version %@" = "버전 %@";
+
+/* 온보딩 */
+"Welcome to Atrium" = "Atrium에 오신 것을 환영합니다";
+"Atrium switches between windows, not just apps: one shortcut shows every window of every app — minimized ones included — as live previews, on whichever screen your cursor is." = "Atrium은 앱이 아니라 창 단위로 전환합니다. 단축키 하나로 모든 앱의 모든 창을 — 축소된 창까지 — 라이브 미리보기로, 커서가 있는 화면에 보여줍니다.";
+"Hold" = "";
+"and tap" = "누른 채";
+"— or" = "탭 — 또는";
+"for this app only" = "현재 앱만";
+"Request Accessibility Access" = "손쉬운 사용 권한 요청";
+"Open Privacy & Security Settings…" = "개인정보 보호 및 보안 설정 열기…";
+"Enable Window Previews…" = "창 미리보기 켜기…";
+"Start Using Atrium" = "Atrium 시작하기";
+"✓ Accessibility access granted" = "✓ 손쉬운 사용 권한이 허용되었습니다";
+"Atrium needs Accessibility access to list and raise windows." = "창을 나열하고 전환하려면 손쉬운 사용 권한이 필요합니다.";
+"✓ Screen Recording granted — window previews enabled" = "✓ 화면 기록 허용됨 — 창 미리보기가 켜졌습니다";
+"✓ Screen Recording granted — previews start on the next launch" = "✓ 화면 기록 허용됨 — 다음 실행부터 미리보기가 표시됩니다";
+"Optional: Screen Recording shows live window previews (icons otherwise)." = "선택 사항: 화면 기록을 허용하면 창을 라이브 미리보기로 보여줍니다 (없으면 아이콘).";
