@@ -10,7 +10,7 @@ import AppKit
    are kept identical so the apps match; the rim is re-derived for a large,
    variable-size panel (see RimView). */
 final class SwitcherPanel: NSPanel {
-    private static let cornerRadius: CGFloat = 48
+    private static let cornerRadius: CGFloat = 60
     /* "Hidden" alpha: at exactly 0 the window server detaches the window
        and the next reveal re-commits stock glass material — a hair above
        zero keeps it attached. As small as possible: this panel is large,
@@ -458,10 +458,10 @@ final class SwitcherPanel: NSPanel {
             /* One tight additive glow instead of Transom's three: on a big
                panel a wide glow reads as haze, not glass. */
             let glow = line(
-                width: 5,
+                width: 4.5,
                 colors: [
-                    .white.withAlphaComponent(0.10), clear,
-                    clear, .white.withAlphaComponent(0.07),
+                    .white.withAlphaComponent(0.08), clear,
+                    clear, .white.withAlphaComponent(0.08),
                 ],
                 locations: [0, t, fromBottom, 1],
                 compositing: "plusL")
@@ -469,10 +469,10 @@ final class SwitcherPanel: NSPanel {
                light "comes from above"), weaker along the bottom, gone on
                the sides where the dark hairline takes over. */
             let bright = line(
-                width: 1.5,
+                width: 1,
                 colors: [
-                    .white.withAlphaComponent(0.55), clear,
-                    clear, .white.withAlphaComponent(0.35),
+                    .white.withAlphaComponent(0.4), clear,
+                    clear, .white.withAlphaComponent(0.25),
                 ],
                 locations: [0, t, fromBottom, 1],
                 compositing: "plusL")
@@ -607,16 +607,26 @@ final class SwitcherItemView: NSView {
     override var wantsUpdateLayer: Bool { true }
 
     override func updateLayer() {
-        /* Opposed to the glass face: a dark scrim on the bright light-mode
-           glass, a bright one on the dark glass — either way the highlight
-           stands out instead of washing into the material. */
+        /* Subtractively blended against the glass face rendered beneath (the
+           cards are siblings above the glass, so a compositingFilter sees
+           the refracted backdrop — the same mechanism as the rim's "plusL",
+           in reverse). Subtracting a constant makes the highlight follow
+           whatever is behind the panel: the familiar gray over a white
+           desktop, but near-black over a dark backdrop — as if the selection
+           punched through the milky glass to the raw desktop. */
+        /* Backdrop-adaptive, mirrored per appearance. Light mode: plusD is
+           linear burn (out = backdrop + color − 1, so the amount SUBTRACTED
+           is 1 − color) — 0.78 subtracts 0.22, matching the old 25%-black
+           scrim on a bright backdrop while a dark backdrop drops near black,
+           as if the selection punched through the glass. Dark mode: the
+           additive mirror (plusL: out = backdrop + color) lifts the dimmed
+           glass instead, so the highlight glows brighter than whatever is
+           behind the panel. */
         let isDark =
             effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        let highlight =
-            isDark
-            ? NSColor.white.withAlphaComponent(0.35)
-            : NSColor.black.withAlphaComponent(0.25)
-        highlightView.layer?.backgroundColor = highlight.cgColor
+        highlightView.layer?.compositingFilter = isDark ? "plusL" : "plusD"
+        highlightView.layer?.backgroundColor =
+            NSColor(white: isDark ? 0.35 : 0.78, alpha: 1).cgColor
     }
 
     override func mouseUp(with event: NSEvent) {
