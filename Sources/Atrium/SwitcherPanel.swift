@@ -37,6 +37,9 @@ final class SwitcherPanel: NSPanel {
     private var rim: RimView?
     private var itemViews: [SwitcherItemView] = []
     private var tuneEpsilonFlip = false
+    /* Stamps each show; a delayed reveal from a superseded show must not
+       fire early into the next one's stock-material window. */
+    private var revealGeneration = 0
 
     init() {
         super.init(
@@ -103,17 +106,37 @@ final class SwitcherPanel: NSPanel {
     override var canBecomeKey: Bool { false }
 
     func show(windows: [SwitcherWindow], selectedIndex: Int, on screen: NSScreen) {
-        layout(windows: windows, on: screen)
+        let resized = layout(windows: windows, on: screen)
         select(selectedIndex)
         isPresented = true
         ignoresMouseEvents = false
+        revealGeneration += 1
+        let generation = revealGeneration
+        if resized {
+            /* A resize re-commits the stock frosted material a frame or two
+               from now (see layout) — revealing immediately would flash it,
+               which is exactly what happened when alternating Option+Tab and
+               Option+` (different list, different size). Stay at the hidden
+               alpha until the re-commit has come and gone under the tight
+               re-tune cadence, then reveal fully tuned. Three frames of
+               latency is imperceptible; the frosted flash was not. */
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+                guard let self, isPresented, generation == revealGeneration else { return }
+                reveal()
+            }
+        } else {
+            reveal()
+        }
+        orderFrontRegardless()
+    }
+
+    private func reveal() {
         /* Zero-duration animator write: replaces any in-flight fade where a
            plain alphaValue assignment would race it. */
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0
             animator().alphaValue = 1
         }
-        orderFrontRegardless()
     }
 
     /// Sizes and populates the dormant panel without presenting it. Called
@@ -127,7 +150,11 @@ final class SwitcherPanel: NSPanel {
         clearContent()
     }
 
-    private func layout(windows: [SwitcherWindow], on screen: NSScreen) {
+    /// Returns whether the panel's size changed — the caller delays the
+    /// reveal in that case (a resize momentarily reverts the glass to stock
+    /// material; see show).
+    @discardableResult
+    private func layout(windows: [SwitcherWindow], on screen: NSScreen) -> Bool {
         itemViews = windows.enumerated().map { index, window in
             let view = SwitcherItemView(window: window)
             view.onClick = { [weak self] in self?.onItemClick?(index) }
@@ -166,16 +193,19 @@ final class SwitcherPanel: NSPanel {
 
         /* A resize makes the glass re-commit its stock material (the same
            way re-attaching does), so the tuning must be re-applied — on a
-           tight cadence, since the re-commit lands a frame or two after the
-           resize and anything slower shows as a frosted flash. */
+           tight per-frame cadence at first, since the re-commit lands a
+           frame or two after the resize and anything slower shows as a
+           frosted flash (the reveal is also held back past this window;
+           see show). */
         tuneGlassMaterial()
         if resized {
-            for delay in [0.05, 0.15, 0.3, 0.7] {
+            for delay in [0.016, 0.033, 0.05, 0.15, 0.3, 0.7] {
                 DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
                     self?.tuneGlassMaterial()
                 }
             }
         }
+        return resized
     }
 
     /* Alpha-only, never to zero, never ordered out: both would reset the
@@ -185,6 +215,7 @@ final class SwitcherPanel: NSPanel {
        afterimage, while bare glass does not. */
     func dismiss() {
         isPresented = false
+        revealGeneration += 1
         ignoresMouseEvents = true
         clearContent()
         NSAnimationContext.runAnimationGroup { context in
