@@ -91,5 +91,37 @@
         sparkle:edSignature="fdsdIWwMzrZNTFnIQJGlJ0bCAfKk1/7KbTyW6fEMNcHIfOaMq+j5zL7uwn+oi+MBNI9l9GaK3hCKxat8giwKDg==" length="2697503"
         type="application/octet-stream"/>
     </item>
+    <item>
+      <title>Atrium v1.2.0</title>
+      <link>https://github.com/domus-apps/atrium/releases/tag/v1.2.0</link>
+      <pubDate>Wed, 02 Sep 2026 07:14:25 +0000</pubDate>
+      <description xml:lang="en"><![CDATA[
+<h3>Added</h3>
+<ul>
+<li>Minimized windows are marked with the same diamond (◆) the Window menu uses, right before their title.</li>
+</ul>
+<h3>Changed</h3>
+<ul>
+<li>The selection highlight now follows what's behind the panel — gray over a bright screen, deeper and darker over a dark one, and glowing brighter instead in dark mode.</li>
+<li>The panel has rounder corners and a thinner, subtler edge highlight.</li>
+</ul>      ]]></description>
+      <description xml:lang="ko"><![CDATA[
+<h3>Added</h3>
+<ul>
+<li>축소된 창의 제목 앞에 윈도우 메뉴와 같은 다이아몬드(◆) 표시가 붙습니다.</li>
+</ul>
+<h3>Changed</h3>
+<ul>
+<li>선택 강조가 패널 뒤 배경을 따라갑니다 — 밝은 화면 위에선 회색, 어두운 배경 위에선 더 짙게 비치고, 다크 모드에선 반대로 밝게 떠오릅니다.</li>
+<li>패널 모서리가 더 둥글어지고 가장자리 하이라이트가 더 가늘고 은은해졌습니다.</li>
+</ul>      ]]></description>
+      <sparkle:version>5</sparkle:version>
+      <sparkle:shortVersionString>1.2.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/domus-apps/atrium/releases/download/v1.2.0/Atrium.zip"
+        sparkle:edSignature="cTHKTWDpQqjJISOrdL9HOEtBuD93GxTus34GSk0+ZLB+sP+1pgJabTa68/dCf1nmu2OgpDK1Bf1j9hTHhT8qCQ==" length="2697463"
+        type="application/octet-stream"/>
+    </item>
   </channel>
 </rss>
