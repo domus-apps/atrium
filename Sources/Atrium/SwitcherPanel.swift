@@ -520,7 +520,9 @@ final class SwitcherItemView: NSView {
     }
 
     init(window: SwitcherWindow) {
-        title = window.title
+        /* The Window-menu convention: minimized windows carry a diamond
+           before their title. A system-wide symbol, so no localization. */
+        title = (window.isMinimized ? "◆ " : "") + window.title
         titleColor = window.isBackground ? .secondaryLabelColor : .labelColor
         super.init(frame: NSRect(origin: .zero, size: Self.size))
         wantsLayer = true

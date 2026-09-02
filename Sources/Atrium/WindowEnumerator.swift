@@ -10,6 +10,9 @@ struct SwitcherWindow {
     /// True for minimized windows and windows of hidden (⌘H) apps — both are
     /// invisible on screen and drawn dimmed in the panel.
     let isBackground: Bool
+    /// Minimized specifically (a subset of isBackground): marked with the
+    /// Window-menu diamond in the panel.
+    let isMinimized: Bool
 
     func focus() {
         window.focus(activating: app)
@@ -52,13 +55,15 @@ enum WindowEnumerator {
             for window in AccessibilityWindow.windows(of: app.processIdentifier) {
                 guard isSwitchable(window) else { continue }
                 let title = window.title ?? ""
+                let minimized = window.isMinimized
                 candidates.append(
                     SwitcherWindow(
                         app: app,
                         window: window,
                         windowID: window.windowID,
                         title: title.isEmpty ? (app.localizedName ?? "Window") : title,
-                        isBackground: window.isMinimized || app.isHidden
+                        isBackground: minimized || app.isHidden,
+                        isMinimized: minimized
                     ))
             }
         }
