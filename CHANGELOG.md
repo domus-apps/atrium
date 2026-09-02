@@ -4,6 +4,17 @@ All notable changes to Atrium are documented here. The release workflow publishe
 
 Keep each bullet on a single line: release notes render line breaks literally (both on GitHub and in the update dialog), so wrapped lines would break mid-sentence.
 
+## 1.1.0
+
+### Added
+
+- Atrium now speaks Korean — the menu, Settings, and the welcome guide follow your macOS language.
+
+### Fixed
+
+- Alternating between Option+Tab and Option+` briefly flashed frosted glass while the panel changed size; the switch is seamless now.
+- The welcome guide's illustration was slightly off-center inside its panel.
+
 ## 1.0.2
 
 ### Added
