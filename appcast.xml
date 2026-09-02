@@ -59,5 +59,37 @@
         sparkle:edSignature="P3uUGXE5barUdWasFcV5xib46ZTSwbKrWGQAxqF1qsE6NC2KsDkG3O4d37UY2ulA7YZshZndDKmc+7IKcEbJCQ==" length="2690212"
         type="application/octet-stream"/>
     </item>
+    <item>
+      <title>Atrium v1.1.0</title>
+      <link>https://github.com/domus-apps/atrium/releases/tag/v1.1.0</link>
+      <pubDate>Wed, 02 Sep 2026 01:15:33 +0000</pubDate>
+      <description xml:lang="en"><![CDATA[
+<h3>Added</h3>
+<ul>
+<li>Atrium now speaks Korean — the menu, Settings, and the welcome guide follow your macOS language.</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>Alternating between Option+Tab and Option+` briefly flashed frosted glass while the panel changed size; the switch is seamless now.</li>
+<li>The welcome guide's illustration was slightly off-center inside its panel.</li>
+</ul>      ]]></description>
+      <description xml:lang="ko"><![CDATA[
+<h3>Added</h3>
+<ul>
+<li>Atrium이 한국어를 지원합니다 — 메뉴, 설정, 시작 가이드가 macOS 언어 설정을 따릅니다.</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>Option+Tab과 Option+`를 번갈아 열 때 패널이 잠깐 뿌옇게 깜빡이던 문제를 고쳤습니다. 이제 전환이 매끄럽습니다.</li>
+<li>시작 가이드의 일러스트가 패널 가운데에서 살짝 어긋나 있던 것을 바로잡았습니다.</li>
+</ul>      ]]></description>
+      <sparkle:version>4</sparkle:version>
+      <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/domus-apps/atrium/releases/download/v1.1.0/Atrium.zip"
+        sparkle:edSignature="fdsdIWwMzrZNTFnIQJGlJ0bCAfKk1/7KbTyW6fEMNcHIfOaMq+j5zL7uwn+oi+MBNI9l9GaK3hCKxat8giwKDg==" length="2697503"
+        type="application/octet-stream"/>
+    </item>
   </channel>
 </rss>
