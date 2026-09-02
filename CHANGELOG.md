@@ -4,6 +4,17 @@ All notable changes to Atrium are documented here. The release workflow publishe
 
 Keep each bullet on a single line: release notes render line breaks literally (both on GitHub and in the update dialog), so wrapped lines would break mid-sentence.
 
+## 1.2.0
+
+### Added
+
+- Minimized windows are marked with the same diamond (◆) the Window menu uses, right before their title.
+
+### Changed
+
+- The selection highlight now follows what's behind the panel — gray over a bright screen, deeper and darker over a dark one, and glowing brighter instead in dark mode.
+- The panel has rounder corners and a thinner, subtler edge highlight.
+
 ## 1.1.0
 
 ### Added
