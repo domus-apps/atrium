@@ -12,14 +12,14 @@ Keep each bullet on a single line: release notes render line breaks literally (b
 
 ### Changed
 
-- The selection highlight now follows what's behind the panel — gray over a bright screen, deeper and darker over a dark one, and glowing brighter instead in dark mode.
+- The selection highlight now follows what's behind the panel: gray over a bright screen, deeper and darker over a dark one, and glowing brighter instead in dark mode.
 - The panel has rounder corners and a thinner, subtler edge highlight.
 
 ## 1.1.0
 
 ### Added
 
-- Atrium now speaks Korean — the menu, Settings, and the welcome guide follow your macOS language.
+- Atrium now speaks Korean: the menu, Settings, and the welcome guide follow your macOS language.
 
 ### Fixed
 
@@ -30,15 +30,15 @@ Keep each bullet on a single line: release notes render line breaks literally (b
 
 ### Added
 
-- Spotlight now finds the app by its Korean name and by what it does — 아트리움, 애트리움, 창 전환, and window switcher all match.
+- Spotlight now finds the app by its Korean name and by what it does: 아트리움, 애트리움, 창 전환, and window switcher all match.
 
 ## 1.0.1
 
-- Fixed: installing by COPYING the app (instead of Finder-moving it) left it running from Gatekeeper's translocated read-only path, which blocked Sparkle updates — the app now detects this at launch, clears the quarantine flag, and relaunches itself from its real location.
+- Fixed: installing by COPYING the app (instead of Finder-moving it) left it running from Gatekeeper's translocated read-only path, which blocked Sparkle updates. The app now detects this at launch, clears the quarantine flag, and relaunches itself from its real location.
 
 ## 1.0.0
 
-- Initial release: hold ⌥ and tap Tab to switch between windows — every window of every app, minimized and hidden ones included, on whichever screen your cursor is.
+- Initial release: hold ⌥ and tap Tab to switch between windows. Every window of every app, minimized and hidden ones included, on whichever screen your cursor is.
 - Live window previews on every card, streaming in as they capture; off-screen windows (minimized, hidden, other Spaces) are pictured from the window server's retained backing store, and previews persist across relaunches.
 - ⌥` scopes the switcher to the frontmost app's own windows, like the system's ⌘` but with the full panel.
 - Cycle with Tab (hold to repeat, ⇧ for backwards), move with the arrow keys, hover or click with the mouse, commit with Return or by releasing ⌥, cancel with Escape.
