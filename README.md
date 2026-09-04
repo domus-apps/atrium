@@ -115,3 +115,9 @@ Sources/Atrium/
 - **Configurable shortcuts**: the recorder + System Settings–style window the sibling apps use.
 - **More gestures**: close/minimize the selected window from the switcher, per-app cycling.
 - **Overflow handling**: scroll or shrink when the window count outgrows the screen.
+
+## License
+
+MIT, see [LICENSE](LICENSE). Bundled third-party software and its licenses are listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+
+Inspired by [AltTab](https://github.com/lwouis/alt-tab-macos). No code is shared.
