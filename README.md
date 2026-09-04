@@ -23,7 +23,7 @@
 - Windows are listed front-to-back; minimized windows, hidden apps, and windows on other
   Spaces trail at the end, drawn dimmed.
 - Each card shows a **live window preview** with the app icon as a badge. On-screen
-  windows capture via ScreenCaptureKit; minimized/hidden windows, even ones never shown
+  windows capture via ScreenCaptureKit. Minimized/hidden windows, even ones never shown
   since launch, capture from the window server's retained backing store (private
   SkyLight API, resolved at runtime so it degrades gracefully if it ever disappears).
   Previews are cached per window and persisted to disk across relaunches (cleared on
@@ -65,7 +65,7 @@ these repository secrets exist (without them, releases fall back to ad-hoc signi
 | `NOTARY_KEY_P8` | Contents of an App Store Connect API key (`.p8`, Developer role) |
 | `NOTARY_KEY_ID` | The API key's Key ID |
 | `NOTARY_ISSUER_ID` | The API key's Issuer ID |
-| `SPARKLE_ED_PRIVATE_KEY` | Sparkle EdDSA private key (`generate_keys -x`) for signing auto-updates; must match `SUPublicEDKey` in `Scripts/Info.plist` |
+| `SPARKLE_ED_PRIVATE_KEY` | Sparkle EdDSA private key (`generate_keys -x`) for signing auto-updates, must match `SUPublicEDKey` in `Scripts/Info.plist` |
 
 ### Auto-updates (Sparkle)
 

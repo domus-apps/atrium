@@ -12,14 +12,14 @@ Keep each bullet on a single line: release notes render line breaks literally (b
 
 ### Changed
 
-- The selection highlight now follows what's behind the panel: gray over a bright screen, deeper and darker over a dark one, and glowing brighter instead in dark mode.
+- The selection highlight now follows what's behind the panel. Gray over a bright screen, deeper and darker over a dark one, and glowing brighter instead in dark mode.
 - The panel has rounder corners and a thinner, subtler edge highlight.
 
 ## 1.1.0
 
 ### Added
 
-- Atrium now speaks Korean: the menu, Settings, and the welcome guide follow your macOS language.
+- Atrium now speaks Korean. The menu, Settings, and the welcome guide follow your macOS language.
 
 ### Fixed
 
