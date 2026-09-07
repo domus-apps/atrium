@@ -4,6 +4,12 @@ All notable changes to Atrium are documented here. The release workflow publishe
 
 Keep each bullet on a single line: release notes render line breaks literally (both on GitHub and in the update dialog), so wrapped lines would break mid-sentence.
 
+## 1.2.1
+
+### Fixed
+
+- Fixed steady processor use that began once Settings had been opened and went on after the window was closed.
+
 ## 1.2.0
 
 ### Added
