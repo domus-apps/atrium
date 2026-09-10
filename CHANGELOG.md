@@ -4,6 +4,12 @@ All notable changes to Atrium are documented here. The release workflow publishe
 
 Keep each bullet on a single line: release notes render line breaks literally (both on GitHub and in the update dialog), so wrapped lines would break mid-sentence.
 
+## 1.3.0
+
+### Changed
+
+- Windows are listed in the order you last used them, so after switching to an app from the Dock or ⌘Tab, Option+Tab takes you straight back to the window you came from instead of that app's other windows.
+
 ## 1.2.2
 
 ### Fixed

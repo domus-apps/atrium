@@ -17,6 +17,9 @@ final class SwitcherController {
        permanently would swallow the key system-wide. A dedicated center makes
        releasing it on hide a plain unregisterAll. */
     private let transientHotKeys = HotKeyCenter()
+    /* Lists are in most-recently-focused order (see FocusHistory), so a quick
+       Option+Tab always returns to the window the user actually came from. */
+    private let focusHistory = FocusHistory()
     private var windows: [SwitcherWindow] = []
     private var selection = 0
     private var flagsMonitors: [Any] = []
@@ -52,7 +55,7 @@ final class SwitcherController {
            the list comes back empty. */
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
             guard let self, !panel.isPresented else { return }
-            let windows = WindowEnumerator.list()
+            let windows = WindowEnumerator.list(recency: focusHistory.ranks())
             guard !windows.isEmpty, let screen = screenUnderMouse() else { return }
             panel.preLayout(windows: windows, on: screen)
         }
@@ -79,7 +82,7 @@ final class SwitcherController {
             return
         }
 
-        var list = WindowEnumerator.list()
+        var list = WindowEnumerator.list(recency: focusHistory.ranks())
         if scope == .frontmostApp {
             let indices = WindowOrdering.frontmostScope(
                 owners: list.map(\.app.processIdentifier),

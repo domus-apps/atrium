@@ -19,25 +19,40 @@ struct SwitcherWindow {
     }
 }
 
-/// Pure ordering core, kept free of AppKit/AX so it stays testable: on-screen
-/// windows come first in z-order (front to back), everything the window
-/// server doesn't show — minimized windows, hidden apps, other Spaces —
-/// follows in discovery order.
+/// Pure ordering core, kept free of AppKit/AX so it stays testable. Windows
+/// the user has focused come first, most recent first (the topmost on-screen
+/// window is pinned to the front in case the history missed a change); then
+/// on-screen windows never focused, in z-order; then everything the window
+/// server doesn't show — minimized windows, hidden apps, other Spaces — in
+/// discovery order.
 enum WindowOrdering {
     /// Returns indices into `ids` in switcher order. `zOrder` maps a
-    /// CGWindowID to its front-to-back rank; ids that are `nil` or absent
-    /// from the map keep their relative order at the end.
-    static func ordered(ids: [CGWindowID?], zOrder: [CGWindowID: Int]) -> [Int] {
+    /// CGWindowID to its front-to-back rank, `recency` to its focus-history
+    /// rank (0 = focused most recently); ids in neither keep their relative
+    /// order at the end.
+    static func ordered(
+        ids: [CGWindowID?], zOrder: [CGWindowID: Int], recency: [CGWindowID: Int] = [:]
+    ) -> [Int] {
+        var recent: [(rank: Int, index: Int)] = []
         var onScreen: [(order: Int, index: Int)] = []
         var background: [Int] = []
         for (index, id) in ids.enumerated() {
-            if let id, let order = zOrder[id] {
+            if let id, let rank = recency[id] {
+                recent.append((rank, index))
+            } else if let id, let order = zOrder[id] {
                 onScreen.append((order, index))
             } else {
                 background.append(index)
             }
         }
-        return onScreen.sorted { $0.order < $1.order }.map(\.index) + background
+        var result = recent.sorted { $0.rank < $1.rank }.map(\.index)
+        if let top = ids.indices.min(by: { a, b in
+            (ids[a].flatMap { zOrder[$0] } ?? .max) < (ids[b].flatMap { zOrder[$0] } ?? .max)
+        }), ids[top].flatMap({ zOrder[$0] }) != nil, let at = result.firstIndex(of: top), at != 0 {
+            result.remove(at: at)
+            result.insert(top, at: 0)
+        }
+        return result + onScreen.sorted { $0.order < $1.order }.map(\.index) + background
     }
 
     /// Indices of the windows to list for the frontmost-app scope (Option+`).
@@ -62,7 +77,7 @@ enum WindowOrdering {
 enum WindowEnumerator {
     /// Every switchable window of every regular app, front-to-back, with
     /// minimized/hidden/off-Space windows trailing.
-    static func list() -> [SwitcherWindow] {
+    static func list(recency: [CGWindowID: Int] = [:]) -> [SwitcherWindow] {
         let zOrder = onScreenZOrder()
         var candidates: [SwitcherWindow] = []
         for app in NSWorkspace.shared.runningApplications
@@ -85,7 +100,8 @@ enum WindowEnumerator {
                     ))
             }
         }
-        let order = WindowOrdering.ordered(ids: candidates.map(\.windowID), zOrder: zOrder)
+        let order = WindowOrdering.ordered(
+            ids: candidates.map(\.windowID), zOrder: zOrder, recency: recency)
         return order.map { candidates[$0] }
     }
 
