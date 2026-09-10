@@ -1,5 +1,6 @@
 import AppKit
 import ServiceManagement
+import SwiftUI
 
 // MARK: - Window
 
@@ -65,11 +66,15 @@ final class SettingsSplitViewController: NSSplitViewController {
 
     private let sidebar = SettingsSidebarViewController()
     private let paneContainer = NSViewController()
-    private let generalPane: GeneralPaneViewController
+    private let generalPane: NSViewController
     private var currentPane: NSViewController?
 
     init(updater: UpdaterController) {
-        generalPane = GeneralPaneViewController(updater: updater)
+        /* The pane is a SwiftUI grouped Form — the exact section-header +
+           rounded-box arrangement Xcode's settings use — hosted inside the
+           AppKit split chrome. */
+        let model = SettingsModel(updater: updater)
+        generalPane = NSHostingController(rootView: GeneralSettingsView(model: model))
         super.init(nibName: nil, bundle: nil)
 
         paneContainer.view = NSView()
@@ -244,104 +249,104 @@ final class SettingsSidebarViewController: NSViewController, NSTableViewDataSour
     }
 }
 
-// MARK: - General pane
+// MARK: - SwiftUI bridge
 
-final class GeneralPaneViewController: NSViewController {
-    private let updater: UpdaterController
+/* Preferences live in UserDefaults (via AppPreferences); this object just
+   republishes their change notification so SwiftUI re-reads, and carries the
+   pieces that aren't preferences (SMAppService, the updater). */
+final class SettingsModel: ObservableObject {
+    let updater: UpdaterController
 
     init(updater: UpdaterController) {
         self.updater = updater
-        super.init(nibName: nil, bundle: nil)
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) is not supported")
-    }
-
-    private lazy var launchAtLoginCheckbox = NSButton(
-        checkboxWithTitle: L("Launch at login"), target: self,
-        action: #selector(toggleLaunchAtLogin))
-
-    private lazy var hideMenuBarIconCheckbox = NSButton(
-        checkboxWithTitle: L("Hide menu bar icon"), target: self,
-        action: #selector(toggleHideMenuBarIcon))
-
-    /* SMAppService needs a real app bundle; a bare `swift run` binary has no
-       bundle identifier to register. */
-    private var isBundledApp: Bool {
-        Bundle.main.bundleIdentifier != nil
-    }
-
-    override func loadView() {
-        var views: [NSView] = [launchAtLoginCheckbox]
-        if isBundledApp {
-            launchAtLoginCheckbox.state = SMAppService.mainApp.status == .enabled ? .on : .off
-        } else {
-            launchAtLoginCheckbox.isEnabled = false
-            let note = NSTextField(
-                wrappingLabelWithString:
-                    L("Available in the bundled app only (Scripts/bundle.sh)."))
-            note.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-            note.textColor = .secondaryLabelColor
-            views.append(note)
+        NotificationCenter.default.addObserver(
+            forName: AppPreferences.changed, object: nil, queue: .main
+        ) { [weak self] _ in
+            self?.objectWillChange.send()
         }
-
-        hideMenuBarIconCheckbox.state = AppPreferences.isMenuBarIconHidden ? .on : .off
-        views.append(hideMenuBarIconCheckbox)
-        let hideNote = NSTextField(
-            wrappingLabelWithString:
-                L("While hidden, launch Atrium again to open Settings. The app appears in the Dock only while this window is open."))
-        hideNote.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-        hideNote.textColor = .secondaryLabelColor
-        views.append(hideNote)
-
-        /* Updates. The menu bar icon (and its Check for Updates item) can be
-           hidden, so the settings window must offer the check too. */
-        let updateButton = updater.makeCheckButton()
-        views.append(updateButton)
-        let info = Bundle.main.infoDictionary
-        if let version = info?["CFBundleShortVersionString"] as? String {
-            let build = (info?["CFBundleVersion"] as? String).map { " (\($0))" } ?? ""
-            let versionNote = NSTextField(labelWithString: L("Version %@", "\(version)\(build)"))
-            versionNote.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-            versionNote.textColor = .secondaryLabelColor
-            views.append(versionNote)
-        }
-
-        let stack = NSStackView(views: views)
-        stack.orientation = .vertical
-        stack.alignment = .leading
-        stack.spacing = 8
-        stack.setCustomSpacing(20, after: hideNote)
-        stack.translatesAutoresizingMaskIntoConstraints = false
-
-        let container = NSView()
-        container.addSubview(stack)
-        NSLayoutConstraint.activate([
-            stack.topAnchor.constraint(
-                equalTo: container.safeAreaLayoutGuide.topAnchor, constant: 20),
-            stack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 24),
-            stack.trailingAnchor.constraint(
-                lessThanOrEqualTo: container.trailingAnchor, constant: -24),
-        ])
-        view = container
     }
 
-    @objc private func toggleHideMenuBarIcon() {
-        AppPreferences.isMenuBarIconHidden = hideMenuBarIconCheckbox.state == .on
-    }
+    /* SMAppService needs a real app bundle; a bare `swift run` binary has
+       no bundle identifier to register. */
+    var isBundledApp: Bool { Bundle.main.bundleIdentifier != nil }
 
-    @objc private func toggleLaunchAtLogin() {
-        do {
-            if launchAtLoginCheckbox.state == .on {
-                try SMAppService.mainApp.register()
-            } else {
-                try SMAppService.mainApp.unregister()
+    var launchAtLogin: Bool {
+        get { SMAppService.mainApp.status == .enabled }
+        set {
+            do {
+                if newValue {
+                    try SMAppService.mainApp.register()
+                } else {
+                    try SMAppService.mainApp.unregister()
+                }
+            } catch {
+                NSLog("Atrium: launch-at-login change failed: \(error)")
             }
-        } catch {
-            launchAtLoginCheckbox.state = launchAtLoginCheckbox.state == .on ? .off : .on
-            NSLog("Atrium: launch-at-login change failed: \(error)")
+            objectWillChange.send()
         }
+    }
+
+    var versionLabel: String {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "dev"
+        let build = (info?["CFBundleVersion"] as? String).map { " (\($0))" } ?? ""
+        return version + build
+    }
+
+    func binding<Value>(
+        _ get: @escaping () -> Value, _ set: @escaping (Value) -> Void
+    ) -> Binding<Value> {
+        Binding(get: get, set: set)
+    }
+}
+
+// MARK: - General pane
+
+struct GeneralSettingsView: View {
+    @ObservedObject var model: SettingsModel
+
+    var body: some View {
+        Form {
+            Section {
+                VStack(alignment: .leading, spacing: 3) {
+                    Toggle(
+                        L("Launch at login"),
+                        isOn: model.binding({ model.launchAtLogin }, { model.launchAtLogin = $0 })
+                    )
+                    .disabled(!model.isBundledApp)
+                    if !model.isBundledApp {
+                        Text(L("Available in the bundled app only (Scripts/bundle.sh)."))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Toggle(
+                        L("Hide menu bar icon"),
+                        isOn: model.binding(
+                            { AppPreferences.isMenuBarIconHidden },
+                            { AppPreferences.isMenuBarIconHidden = $0 }))
+                    Text(
+                        L(
+                            "While hidden, launch Atrium again to open Settings. The app appears in the Dock only while this window is open."
+                        )
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
+            }
+
+            /* The menu bar icon (and its Check for Updates item) can be
+               hidden, so the settings window must offer the check too. */
+            Section(L("Updates")) {
+                LabeledContent(L("Version"), value: model.versionLabel)
+                Button(L("Check for Updates…")) {
+                    model.updater.checkForUpdates()
+                }
+                .disabled(!model.updater.canCheckForUpdates)
+            }
+        }
+        .formStyle(.grouped)
     }
 }

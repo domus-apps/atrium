@@ -22,3 +22,20 @@ import Testing
 @Test func emptyInputYieldsEmptyOrder() {
     #expect(WindowOrdering.ordered(ids: [], zOrder: [:]).isEmpty)
 }
+
+// MARK: - frontmostScope(owners:frontmost:)
+
+@Test func frontmostScopeListsTheFrontmostAppsWindows() {
+    #expect(WindowOrdering.frontmostScope(owners: [10, 20, 10, 30], frontmost: 10) == [0, 2])
+    #expect(WindowOrdering.frontmostScope(owners: [10, 20, 10, 30], frontmost: 30) == [3])
+}
+
+@Test func frontmostScopeFallsBackToTheTopmostWindowsApp() {
+    /* The active app (99) has no windows — a windowless menu bar app. */
+    #expect(WindowOrdering.frontmostScope(owners: [20, 10, 20], frontmost: 99) == [0, 2])
+    #expect(WindowOrdering.frontmostScope(owners: [20, 10, 20], frontmost: nil) == [0, 2])
+}
+
+@Test func frontmostScopeIsEmptyWithoutWindows() {
+    #expect(WindowOrdering.frontmostScope(owners: [], frontmost: 42).isEmpty)
+}

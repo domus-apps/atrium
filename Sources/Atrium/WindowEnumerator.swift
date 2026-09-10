@@ -39,6 +39,24 @@ enum WindowOrdering {
         }
         return onScreen.sorted { $0.order < $1.order }.map(\.index) + background
     }
+
+    /// Indices of the windows to list for the frontmost-app scope (Option+`).
+    /// `owners` holds each window's owning pid in switcher order, so the first
+    /// entry belongs to the topmost window on screen. The frontmost app is
+    /// whatever the system reports, but that can be an app with no windows at
+    /// all: a menu bar app that activated itself to show its settings stays
+    /// the active app after the window closes, because macOS never moves
+    /// activation on window close. Listing nothing there made the shortcut
+    /// look dead (only quitting the windowless app "fixed" it), so fall back
+    /// to the app owning the topmost window — the app the user sees as front.
+    static func frontmostScope(owners: [pid_t], frontmost: pid_t?) -> [Int] {
+        if let frontmost {
+            let own = owners.indices.filter { owners[$0] == frontmost }
+            if !own.isEmpty { return own }
+        }
+        guard let top = owners.first else { return [] }
+        return owners.indices.filter { owners[$0] == top }
+    }
 }
 
 enum WindowEnumerator {

@@ -4,6 +4,17 @@ All notable changes to Atrium are documented here. The release workflow publishe
 
 Keep each bullet on a single line: release notes render line breaks literally (both on GitHub and in the update dialog), so wrapped lines would break mid-sentence.
 
+## 1.2.2
+
+### Fixed
+
+- Option+` now works when the active app has no windows, such as right after closing a menu bar app's settings, by listing the windows of the app in front.
+
+### Changed
+
+- Closing Settings or the welcome window returns you to the app you were using.
+- Settings uses the standard grouped layout, and ⌘W closes the window.
+
 ## 1.2.1
 
 ### Fixed

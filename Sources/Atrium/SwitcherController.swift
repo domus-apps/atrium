@@ -81,10 +81,10 @@ final class SwitcherController {
 
         var list = WindowEnumerator.list()
         if scope == .frontmostApp {
-            guard let frontmost = NSWorkspace.shared.frontmostApplication else { return }
-            list = list.filter {
-                $0.app.processIdentifier == frontmost.processIdentifier
-            }
+            let indices = WindowOrdering.frontmostScope(
+                owners: list.map(\.app.processIdentifier),
+                frontmost: NSWorkspace.shared.frontmostApplication?.processIdentifier)
+            list = indices.map { list[$0] }
         }
         windows = list
         guard !windows.isEmpty, let screen = screenUnderMouse() else { return }

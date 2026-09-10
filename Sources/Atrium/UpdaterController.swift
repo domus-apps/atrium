@@ -18,14 +18,13 @@ final class UpdaterController {
             startingUpdater: isStarted, updaterDelegate: nil, userDriverDelegate: nil)
     }
 
-    /* Unlike menu items, buttons aren't auto-validated, so disable manually
-       when the updater never started (non-bundled dev builds). */
-    func makeCheckButton() -> NSButton {
-        let button = NSButton(
-            title: L("Check for Updates…"), target: controller,
-            action: #selector(SPUStandardUpdaterController.checkForUpdates(_:)))
-        button.isEnabled = isStarted
-        return button
+    /* For the SwiftUI settings pane: buttons there aren't menu-validated,
+       so expose the started state explicitly (false for non-bundled dev
+       builds, where the updater never started). */
+    var canCheckForUpdates: Bool { isStarted }
+
+    func checkForUpdates() {
+        controller.checkForUpdates(nil)
     }
 
     func makeMenuItem() -> NSMenuItem {
