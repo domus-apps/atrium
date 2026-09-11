@@ -305,5 +305,59 @@
         sparkle:edSignature="E/eEcFLpgqNUwSInfAQaHYxdnDgc/948N6SrOqd6xZItmW0imbhe9vosnOYexVWaZc+DeUgzmpQ0OZMd4ZT/DQ==" length="2714180"
         type="application/octet-stream"/>
     </item>
+    <item>
+      <title>Atrium v1.3.1</title>
+      <link>https://github.com/domus-apps/atrium/releases/tag/v1.3.1</link>
+      <pubDate>Fri, 11 Sep 2026 05:46:28 +0000</pubDate>
+      <description xml:lang="en"><![CDATA[
+<h2>1.3.1</h2>
+<h3>Fixed</h3>
+<ul>
+<li>The app icon's background looked flat in the Dock and Finder. It now shows its gradient.</li>
+</ul>
+<h2>1.3.0</h2>
+<h3>Changed</h3>
+<ul>
+<li>Windows are listed in the order you last used them, so after switching to an app from the Dock or ⌘Tab, Option+Tab takes you straight back to the window you came from instead of that app's other windows.</li>
+</ul>
+<h2>1.2.2</h2>
+<h3>Fixed</h3>
+<ul>
+<li>Option+` now works when the active app has no windows, such as right after closing a menu bar app's settings, by listing the windows of the app in front.</li>
+</ul>
+<h3>Changed</h3>
+<ul>
+<li>Closing Settings or the welcome window returns you to the app you were using.</li>
+<li>Settings uses the standard grouped layout, and ⌘W closes the window.</li>
+</ul>      ]]></description>
+      <description xml:lang="ko"><![CDATA[
+<h2>1.3.1</h2>
+<h3>수정</h3>
+<ul>
+<li>Dock과 Finder에서 앱 아이콘 배경이 평면으로 보이던 문제를 고쳤습니다.</li>
+</ul>
+<h2>1.3.0</h2>
+<h3>변경</h3>
+<ul>
+<li>창 목록이 마지막으로 사용한 순서로 정렬되어, Dock이나 ⌘Tab으로 앱을 전환한 뒤에도 Option+Tab이 그 앱의 다른 창 대신 직전에 보던 창으로 바로 돌아갑니다.</li>
+</ul>
+<h2>1.2.2</h2>
+<h3>수정</h3>
+<ul>
+<li>메뉴 막대 앱의 설정 창을 닫은 직후처럼 활성 앱에 창이 없을 때도 Option+`가 맨 앞 창의 앱을 기준으로 동작합니다.</li>
+</ul>
+<h3>변경</h3>
+<ul>
+<li>설정 창이나 시작 안내 창을 닫으면 이전에 쓰던 앱으로 돌아갑니다.</li>
+<li>설정 창이 표준 그룹 레이아웃으로 바뀌고, ⌘W로 창을 닫을 수 있습니다.</li>
+</ul>      ]]></description>
+      <sparkle:version>9</sparkle:version>
+      <sparkle:shortVersionString>1.3.1</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/domus-apps/atrium/releases/download/v1.3.1/Atrium.zip"
+        sparkle:edSignature="KDWKOwbD58z612atVH3x6e+jjVAp3oZL/f4sg2bvseGjZh4dv4GBAR1VwLvyAo2nquTO+3EzWMm2M8mU/vnfAw==" length="2930514"
+        type="application/octet-stream"/>
+    </item>
   </channel>
 </rss>
