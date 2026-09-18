@@ -253,10 +253,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let policy: NSApplication.ActivationPolicy = wantsDock ? .regular : .accessory
         guard NSApp.activationPolicy() != policy else { return }
         NSApp.setActivationPolicy(policy)
-        /* Flipping the policy can drop activation; keep Settings in front. */
-        if isSettingsWindowVisible {
+        /* Flipping the policy can drop activation; keep Settings in front.
+           Going back to accessory has to wait: macOS 27.2 (measured
+           2026-09-18) leaves the window undraggable by its title bar until
+           the app goes through a real activation, and the deactivation the
+           flip causes lands asynchronously — re-activating right away (even
+           on the next run-loop turn or on didResignActive, ~10 ms) is a
+           no-op that leaves the window stuck; 50 ms was borderline, 0.2 s
+           and up always worked. Going to regular has no such problem. */
+        guard isSettingsWindowVisible else { return }
+        if policy == .regular {
             NSApp.activate(ignoringOtherApps: true)
             settingsWindowController?.window?.makeKeyAndOrderFront(nil)
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                guard let self, isSettingsWindowVisible else { return }
+                NSApp.activate(ignoringOtherApps: true)
+                settingsWindowController?.window?.makeKeyAndOrderFront(nil)
+            }
         }
     }
 
