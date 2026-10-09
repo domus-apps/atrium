@@ -22,7 +22,8 @@ final class SwitcherPanel: NSPanel {
     var onItemClick: ((Int) -> Void)?
     var onItemHover: ((Int) -> Void)?
     /// Whether the switcher is currently presented. Not `isVisible`: the
-    /// panel stays ordered in at 1% alpha forever (see hiddenAlpha).
+    /// panel stays ordered in at near-zero alpha forever (see hiddenAlpha),
+    /// parked off every screen while dormant (see park).
     private(set) var isPresented = false
 
     private let glass = NSGlassEffectView()
@@ -98,6 +99,20 @@ final class SwitcherPanel: NSPanel {
                     self?.tuneGlassMaterial()
                 }
             }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+                guard let self, !isPresented else { return }
+                park()
+            }
+        }
+        /* A display change can pull the parked panel back onto a screen. */
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification, object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            DispatchQueue.main.async { [weak self] in
+                guard let self, !isPresented else { return }
+                park()
+            }
         }
     }
 
@@ -148,6 +163,7 @@ final class SwitcherPanel: NSPanel {
         guard !isPresented else { return }
         layout(windows: windows, on: screen)
         clearContent()
+        park()
     }
 
     /// Returns whether the panel's size changed — the caller delays the
@@ -222,6 +238,20 @@ final class SwitcherPanel: NSPanel {
             context.duration = 0
             animator().alphaValue = Self.hiddenAlpha
         }
+        park()
+    }
+
+    /* The dormant panel waits off every screen. Left where it was shown, it
+       would sit invisibly over the middle of the screen, above every app,
+       and macOS treats that as covering whatever is below: the App Store's
+       payment sheet (measured 2026-10-09) saw itself as occluded and never
+       turned on Touch ID while Atrium was running. Moving keeps the window
+       attached, so the tuned glass survives; only ordering out or a resize
+       would reset it. */
+    private func park() {
+        let screens = NSScreen.screens.reduce(NSRect.null) { $0.union($1.frame) }
+        guard !screens.isNull else { return }
+        setFrameOrigin(NSPoint(x: screens.maxX + 100, y: screens.maxY + 100))
     }
 
     private func clearContent() {

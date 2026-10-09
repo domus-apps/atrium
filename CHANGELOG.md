@@ -4,6 +4,12 @@ All notable changes to Atrium are documented here. The release workflow publishe
 
 Keep each bullet on a single line: release notes render line breaks literally (both on GitHub and in the update dialog), so wrapped lines would break mid-sentence.
 
+## 1.3.3
+
+### Fixed
+
+- While Atrium was running, Touch ID didn't work when buying or downloading apps in the App Store.
+
 ## 1.3.2
 
 ### Fixed
