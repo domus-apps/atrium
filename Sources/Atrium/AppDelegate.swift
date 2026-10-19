@@ -1,5 +1,6 @@
 import AppKit
 import Carbon.HIToolbox
+import ServiceManagement
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let hotKeys = HotKeyCenter()
@@ -21,8 +22,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         updateStatusItemVisibility()
         registerShortcuts()
 
-        if CommandLine.arguments.contains("--settings") {
-            openSettings()
+        /* With the menu bar icon hidden, opening the app would otherwise
+           show nothing at all. A launch at login or Sparkle's relaunch after
+           an update stays quiet, and so does one that brought an unfinished
+           onboarding back (one window at a time). A turn later, because
+           activating from inside didFinishLaunching doesn't take (macOS
+           27.2): the window would open behind the current app. */
+        if CommandLine.arguments.contains("--settings")
+            || (AppPreferences.isMenuBarIconHidden && !Self.launchedAtLogin
+                && !UpdaterController.launchedByUpdate()
+                && UserDefaults.standard.bool(forKey: Self.onboardingCompletedKey))
+        {
+            DispatchQueue.main.async { [weak self] in self?.openSettings() }
         }
 
         /* The permission asks live inside onboarding — no launch-time
@@ -44,16 +55,49 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /* Launching the app again while it's already running sends "reopen" to
-       the live instance. With the menu bar icon hidden this is the only way
-       back into the UI, so surface Settings (which also puts the app in the
-       Dock via updateActivationPolicy). */
+       the live instance: surface Settings, menu bar icon or not (with the
+       icon hidden it is the only way back into the UI, and
+       updateActivationPolicy also puts the app in the Dock). An unfinished
+       onboarding comes forward instead. */
     func applicationShouldHandleReopen(
         _ sender: NSApplication, hasVisibleWindows: Bool
     ) -> Bool {
-        if AppPreferences.isMenuBarIconHidden {
+        if onboardingController?.window?.isVisible == true {
+            showOnboarding()
+        } else {
             openSettings()
         }
         return false
+    }
+
+    /* Whether macOS started the app at login rather than someone opening
+       it. A login item's launch event says so; for an app registered to
+       launch at login, the time since the console login backs that up
+       (login items started 75–80 s after it, measured 2026-10-18), since a
+       hidden menu bar icon must not bring Settings up at every login.
+       Unregistered, an early launch is someone opening it. */
+    private static var launchedAtLogin: Bool {
+        if let event = NSAppleEventManager.shared().currentAppleEvent,
+            event.eventID == kAEOpenApplication,
+            event.paramDescriptor(forKeyword: keyAEPropData)?.enumCodeValue
+                == keyAELaunchedAsLogInItem
+        {
+            return true
+        }
+        guard SMAppService.mainApp.status == .enabled else { return false }
+        var loggedIn = 0
+        setutxent()
+        while let entry = getutxent() {
+            var record = entry.pointee
+            let line = withUnsafeBytes(of: &record.ut_line) {
+                String(decoding: $0.prefix { $0 != 0 }, as: UTF8.self)
+            }
+            if record.ut_type == USER_PROCESS, line == "console" {
+                loggedIn = max(loggedIn, record.ut_tv.tv_sec)
+            }
+        }
+        endutxent()
+        return Date().timeIntervalSince1970 - Double(loggedIn) < 5 * 60
     }
 
     private func showOnboarding() {
