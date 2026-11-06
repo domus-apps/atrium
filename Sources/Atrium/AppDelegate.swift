@@ -201,6 +201,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settingsMenuItem.target = self
         menu.addItem(settingsMenuItem)
         menu.addItem(updater.makeMenuItem())
+        menu.addItem(makeWebsiteItem())
         /* Remote-debugging aid: one click copies a preview-capture report
            (permission state and a per-window verdict) for pasting back. */
         let diagnosticsItem = NSMenuItem(
@@ -316,6 +317,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 settingsWindowController?.window?.makeKeyAndOrderFront(nil)
             }
         }
+    }
+
+    private func makeWebsiteItem() -> NSMenuItem {
+        let item = NSMenuItem(
+            title: L("Domus Website"), action: #selector(openWebsite), keyEquivalent: "")
+        item.target = self
+        return item
+    }
+
+    @objc private func openWebsite() {
+        NSWorkspace.shared.open(websiteURL)
     }
 
     @objc private func openSettings() {

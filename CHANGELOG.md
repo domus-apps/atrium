@@ -4,6 +4,12 @@ All notable changes to Atrium are documented here. The release workflow publishe
 
 Keep each bullet on a single line: release notes render line breaks literally (both on GitHub and in the update dialog), so wrapped lines would break mid-sentence.
 
+## 1.4.0
+
+### Added
+
+- You can open the Domus website in your language from the menu bar menu or Settings.
+
 ## 1.3.4
 
 ### Changed
